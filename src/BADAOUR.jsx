@@ -621,14 +621,24 @@ export default function BADAOUR() {
   const removeItem = (id) => { setCart(p => p.filter(i => i.id !== id)); toast("Article retiré", "info"); };
   const toggleWishlist = (id) => setWishlist(w => w.includes(id) ? w.filter(x => x !== id) : [...w, id]);
 
-  const handlePay = () => {
+  const handlePay = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      const o = { id: genId(), date: new Date().toLocaleDateString("fr-CA"), status: "confirmed", items: [...cart], total, shipping, client: form.name, address: `${form.address}, ${form.city}, ${form.province} ${form.postal}`, payMethod: payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac", events: [{ step: "confirmed", date: new Date().toLocaleString("fr-CA"), note: `Paiement reçu – ${payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac"}` }] };
-      setOrders(p => [o, ...p]);
-      if (currentUser) setAccounts(a => a.map(u => u.email === currentUser.email ? { ...u, orders: [o, ...(u.orders || [])] } : u));
-      setLastOrder(o); setCart([]); setPayStep("cart"); setProcessing(false); setPage("confirmation");
-    }, 2800);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: cart, customerInfo: form }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "Erreur de paiement");
+      }
+    } catch (err) {
+      toast("Erreur: " + err.message, "info");
+      setProcessing(false);
+    }
   };
 
   const doTrack = () => {

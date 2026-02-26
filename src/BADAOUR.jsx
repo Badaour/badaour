@@ -636,11 +636,19 @@ export default function BADAOUR() {
 
   const handlePay = () => {
     setProcessing(true);
-    setTimeout(() => {
-      const o = { id: genId(), date: new Date().toLocaleDateString("fr-CA"), status: "confirmed", items: [...cart], total, shipping, client: form.name, address: `${form.address}, ${form.city}, ${form.province} ${form.postal}`, payMethod: payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac", events: [{ step: "confirmed", date: new Date().toLocaleString("fr-CA"), note: `Paiement reçu – ${payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac"}` }] };
+    setTimeout(async () => {
+      const o = { id: genId(), date: new Date().toLocaleDateString("fr-CA"), status: "confirmed", items: [...cart], total, shipping, client: form.name, email: form.email, address: `${form.address}, ${form.city}, ${form.province} ${form.postal}`, payMethod: payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac", events: [{ step: "confirmed", date: new Date().toLocaleString("fr-CA"), note: `Paiement reçu – ${payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac"}` }] };
       setOrders(p => [o, ...p]);
       if (currentUser) setAccounts(a => a.map(u => u.email === currentUser.email ? { ...u, orders: [o, ...(u.orders || [])] } : u));
       setLastOrder(o); setCart([]); setPayStep("cart"); setProcessing(false); setPage("confirmation");
+      // Envoyer email de confirmation
+      try {
+        await fetch('/api/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: o }),
+        });
+      } catch (err) { console.error('Email:', err); }
     }, 2800);
   };
 

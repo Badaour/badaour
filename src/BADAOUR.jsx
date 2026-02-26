@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const PHONE = "438-988-6682";
@@ -605,6 +605,19 @@ export default function BADAOUR() {
   const [currentUser, setCurrentUser] = useState(null);
   const [accounts, setAccounts] = useState([{ firstName: "Mamadou", lastName: "Diallo", email: "mamadou@test.com", password: "test123", orders: DEMO_ORDERS }]);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth < 1024);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handle = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth < 1024);
+    };
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
+  }, []);
+
   const cartQty = cart.reduce((s, i) => s + i.qty, 0);
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const shipping = cart.length > 0 ? 18 : 0;
@@ -621,24 +634,14 @@ export default function BADAOUR() {
   const removeItem = (id) => { setCart(p => p.filter(i => i.id !== id)); toast("Article retiré", "info"); };
   const toggleWishlist = (id) => setWishlist(w => w.includes(id) ? w.filter(x => x !== id) : [...w, id]);
 
-  const handlePay = async () => {
+  const handlePay = () => {
     setProcessing(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart, customerInfo: form }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || "Erreur de paiement");
-      }
-    } catch (err) {
-      toast("Erreur: " + err.message, "info");
-      setProcessing(false);
-    }
+    setTimeout(() => {
+      const o = { id: genId(), date: new Date().toLocaleDateString("fr-CA"), status: "confirmed", items: [...cart], total, shipping, client: form.name, address: `${form.address}, ${form.city}, ${form.province} ${form.postal}`, payMethod: payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac", events: [{ step: "confirmed", date: new Date().toLocaleString("fr-CA"), note: `Paiement reçu – ${payMethod === "card" ? "Carte crédit" : payMethod === "paypal" ? "PayPal" : "Interac"}` }] };
+      setOrders(p => [o, ...p]);
+      if (currentUser) setAccounts(a => a.map(u => u.email === currentUser.email ? { ...u, orders: [o, ...(u.orders || [])] } : u));
+      setLastOrder(o); setCart([]); setPayStep("cart"); setProcessing(false); setPage("confirmation");
+    }, 2800);
   };
 
   const doTrack = () => {
@@ -682,6 +685,7 @@ export default function BADAOUR() {
       <style>{`
         @keyframes fadeSlide { from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+        @keyframes slideDown { from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)} }
         * { box-sizing: border-box; }
         input:focus,textarea:focus,select:focus { border-color:${G}!important; outline:none; }
         .hover-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(26,10,0,0.14); }
@@ -689,112 +693,228 @@ export default function BADAOUR() {
         button { transition:opacity .15s,background .2s; cursor:pointer; }
         button:hover:not(:disabled) { opacity:.87; }
         .cat-pill:hover { background:${DARK}!important; color:${G}!important; }
+
+        /* ── RESPONSIVE GRID HELPERS ── */
+        .grid-5 { display:grid; grid-template-columns:repeat(5,1fr); gap:18px; }
+        .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:22px; }
+        .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        .grid-checkout { display:grid; grid-template-columns:1fr 320px; gap:26px; }
+        .grid-checkout-sm { display:grid; grid-template-columns:1fr 280px; gap:26px; }
+        .grid-footer { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:32px; }
+        .grid-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+        .grid-hero-stats { display:flex; gap:48px; }
+        .page-pad { padding: 46px 56px; }
+        .hero-pad { padding: 80px 60px; }
+        .section-pad { padding: 56px 60px; }
+
+        /* ── HEADER SEARCH ── */
+        .header-search { flex:1; max-width:320px; margin:0 28px; position:relative; }
+        .header-nav { display:flex; gap:16px; align-items:center; }
+        .mobile-menu { display:none; }
+        .hamburger { display:none; }
+
+        /* ── TABLET (< 1024px) ── */
+        @media (max-width:1024px) {
+          .grid-5 { grid-template-columns:repeat(3,1fr); }
+          .grid-4 { grid-template-columns:repeat(2,1fr); }
+          .grid-3 { grid-template-columns:repeat(2,1fr); }
+          .grid-footer { grid-template-columns:1fr 1fr; gap:24px; }
+          .hero-pad { padding: 56px 36px; }
+          .section-pad { padding: 40px 36px; }
+          .page-pad { padding: 36px 36px; }
+          .header-search { max-width:220px; margin:0 14px; }
+          .grid-checkout { grid-template-columns:1fr; }
+          .grid-checkout-sm { grid-template-columns:1fr; }
+          .grid-stats { grid-template-columns:repeat(3,1fr); }
+        }
+
+        /* ── MOBILE (< 768px) ── */
+        @media (max-width:768px) {
+          .grid-5 { grid-template-columns:repeat(2,1fr); gap:12px; }
+          .grid-4 { grid-template-columns:repeat(2,1fr); gap:12px; }
+          .grid-3 { grid-template-columns:1fr; }
+          .grid-footer { grid-template-columns:1fr; gap:20px; }
+          .grid-stats { grid-template-columns:1fr; }
+          .grid-hero-stats { flex-wrap:wrap; gap:20px; }
+          .hero-pad { padding: 36px 20px; }
+          .section-pad { padding: 28px 20px; }
+          .page-pad { padding: 20px 16px; }
+          .header-search { display:none; }
+          .header-nav { display:none; }
+          .hamburger { display:flex; align-items:center; justify-content:center; background:none; border:1px solid ${G}; border-radius:3px; width:40px; height:40px; cursor:pointer; font-size:20px; color:${G}; }
+          .mobile-menu { display:block; position:fixed; top:0; left:0; right:0; bottom:0; background:${DARK}; z-index:999; padding:24px 20px; animation:slideDown .25s ease; overflow-y:auto; }
+          .mobile-close { background:none; border:none; color:${G}; font-size:28px; cursor:pointer; float:right; }
+          .grid-checkout { grid-template-columns:1fr; }
+          .grid-checkout-sm { grid-template-columns:1fr; }
+          .hero-h1 { font-size:32px!important; }
+          .hero-btns { flex-direction:column!important; gap:10px!important; }
+          .hero-btns button { width:100%; }
+          .cat-banner { display:none; }
+        }
+
+        /* ── SMALL MOBILE (< 480px) ── */
+        @media (max-width:480px) {
+          .grid-4 { grid-template-columns:1fr 1fr; gap:10px; }
+          .grid-5 { grid-template-columns:1fr 1fr; gap:10px; }
+        }
       `}</style>
 
       {/* TOAST */}
       {notif && <div style={{ position:"fixed", top:18, right:18, zIndex:9999, background:notif.type==="info"?"#1A5276":RED, color:CREAM, padding:"12px 22px", borderRadius:3, fontSize:13, boxShadow:"0 4px 24px rgba(0,0,0,.3)", animation:"fadeSlide .3s ease", maxWidth:320 }}>{notif.msg}</div>}
 
       {/* ── HEADER ── */}
-      <header style={{ background:DARK, borderBottom:`3px solid ${G}`, position:"sticky", top:0, zIndex:100, padding:"0 36px" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid #3A1F00", padding:"6px 0", fontSize:11, color:G, letterSpacing:1 }}>
-          <span>🌍 Livraison Afrique → Canada · 14–21 jours</span>
-          <span>Commerce éthique · Artisanat 100% authentique</span>
-          <span>📞 {PHONE} · ✉️ {EMAIL}</span>
-        </div>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 0" }}>
-          <div onClick={()=>setPage("home")} style={{ cursor:"pointer" }}>
-            <div style={{ fontSize:28, fontWeight:"bold", color:G, letterSpacing:6, textTransform:"uppercase", textShadow:"0 0 26px rgba(212,175,55,.4)" }}>BADAOUR</div>
-            <div style={{ fontSize:9, color:"#A0845C", letterSpacing:3, marginTop:-2 }}>L'AFRIQUE À VOTRE PORTE</div>
+      <header style={{ background:DARK, borderBottom:`3px solid ${G}`, position:"sticky", top:0, zIndex:100, padding:"0 20px" }}>
+        {!isMobile && (
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid #3A1F00", padding:"6px 0", fontSize:11, color:G, letterSpacing:1 }}>
+            <span>🌍 Livraison Afrique → Canada · 14–21 jours</span>
+            <span className="cat-banner">Commerce éthique · Artisanat 100% authentique</span>
+            <span>📞 {PHONE}</span>
           </div>
-          <div style={{ flex:1, maxWidth:320, margin:"0 28px", position:"relative" }}>
-            <input value={searchQuery} onChange={e=>{setSearchQuery(e.target.value);setPage("boutique");setActiveCategory(null);}} placeholder="Rechercher un produit, un artisan, un pays..."
-              style={{ width:"100%", padding:"8px 13px 8px 38px", background:"#2A1000", border:`1px solid ${G}`, borderRadius:2, color:CREAM, fontSize:12, fontFamily:"Georgia", outline:"none", boxSizing:"border-box" }}/>
-            <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", fontSize:13 }}>🔍</span>
+        )}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding: isMobile ? "12px 0" : "14px 0" }}>
+          <div onClick={()=>{setPage("home");setMenuOpen(false);}} style={{ cursor:"pointer" }}>
+            <div style={{ fontSize: isMobile ? 22 : 28, fontWeight:"bold", color:G, letterSpacing: isMobile ? 4 : 6, textTransform:"uppercase", textShadow:"0 0 26px rgba(212,175,55,.4)" }}>BADAOUR</div>
+            {!isMobile && <div style={{ fontSize:9, color:"#A0845C", letterSpacing:3, marginTop:-2 }}>L'AFRIQUE À VOTRE PORTE</div>}
           </div>
-          <nav style={{ display:"flex", gap:16, alignItems:"center" }}>
-            {navItems.map(({k,l})=>(
-              <button key={k} onClick={()=>setPage(k)} style={{ background:"none", border:"none", cursor:"pointer", color:page===k?G:"#A0845C", fontSize:12, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"Georgia", borderBottom:page===k?`2px solid ${G}`:"2px solid transparent", paddingBottom:2 }}>{l}</button>
-            ))}
-            {/* Account */}
-            <button onClick={()=>setPage(currentUser?"compte":"auth")} style={{ background:"none", border:`1px solid #3A1F00`, borderRadius:2, padding:"6px 12px", color:currentUser?G:"#A0845C", fontFamily:"Georgia", fontSize:11, letterSpacing:1, cursor:"pointer" }}>
-              {currentUser ? `👤 ${currentUser.firstName}` : "👤 Connexion"}
-            </button>
-            {/* Cart */}
-            <button onClick={()=>{setPayStep("cart");setPage("panier");}} style={{ background:G, border:"none", borderRadius:2, padding:"7px 13px", cursor:"pointer", color:DARK, fontFamily:"Georgia", fontSize:12, fontWeight:"bold", letterSpacing:1, position:"relative" }}>
-              🛒 Panier
-              {cartQty>0&&<span style={{ position:"absolute", top:-7, right:-7, background:"#C0392B", color:"white", borderRadius:"50%", width:20, height:20, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:"bold" }}>{cartQty}</span>}
-            </button>
-          </nav>
+
+          {/* Desktop search */}
+          {!isMobile && (
+            <div className="header-search">
+              <input value={searchQuery} onChange={e=>{setSearchQuery(e.target.value);setPage("boutique");setActiveCategory(null);}} placeholder="Rechercher un produit, artisan, pays..."
+                style={{ width:"100%", padding:"8px 13px 8px 38px", background:"#2A1000", border:`1px solid ${G}`, borderRadius:2, color:CREAM, fontSize:12, fontFamily:"Georgia", outline:"none", boxSizing:"border-box" }}/>
+              <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", fontSize:13 }}>🔍</span>
+            </div>
+          )}
+
+          {/* Desktop nav */}
+          {!isMobile && (
+            <nav className="header-nav">
+              {navItems.map(({k,l})=>(
+                <button key={k} onClick={()=>setPage(k)} style={{ background:"none", border:"none", cursor:"pointer", color:page===k?G:"#A0845C", fontSize:12, letterSpacing:1.5, textTransform:"uppercase", fontFamily:"Georgia", borderBottom:page===k?`2px solid ${G}`:"2px solid transparent", paddingBottom:2 }}>{l}</button>
+              ))}
+              <button onClick={()=>setPage(currentUser?"compte":"auth")} style={{ background:"none", border:`1px solid #3A1F00`, borderRadius:2, padding:"6px 12px", color:currentUser?G:"#A0845C", fontFamily:"Georgia", fontSize:11, letterSpacing:1, cursor:"pointer" }}>
+                {currentUser ? `👤 ${currentUser.firstName}` : "👤 Connexion"}
+              </button>
+              <button onClick={()=>{setPayStep("cart");setPage("panier");}} style={{ background:G, border:"none", borderRadius:2, padding:"7px 13px", cursor:"pointer", color:DARK, fontFamily:"Georgia", fontSize:12, fontWeight:"bold", letterSpacing:1, position:"relative" }}>
+                🛒 Panier
+                {cartQty>0&&<span style={{ position:"absolute", top:-7, right:-7, background:"#C0392B", color:"white", borderRadius:"50%", width:20, height:20, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:"bold" }}>{cartQty}</span>}
+              </button>
+            </nav>
+          )}
+
+          {/* Mobile right side */}
+          {isMobile && (
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <button onClick={()=>{setPayStep("cart");setPage("panier");setMenuOpen(false);}} style={{ background:G, border:"none", borderRadius:2, padding:"7px 12px", cursor:"pointer", color:DARK, fontFamily:"Georgia", fontSize:12, fontWeight:"bold", position:"relative" }}>
+                🛒
+                {cartQty>0&&<span style={{ position:"absolute", top:-6, right:-6, background:"#C0392B", color:"white", borderRadius:"50%", width:18, height:18, display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:"bold" }}>{cartQty}</span>}
+              </button>
+              <button className="hamburger" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen ? "✕" : "☰"}</button>
+            </div>
+          )}
         </div>
+
+        {/* Mobile search bar */}
+        {isMobile && (
+          <div style={{ paddingBottom:10, position:"relative" }}>
+            <input value={searchQuery} onChange={e=>{setSearchQuery(e.target.value);setPage("boutique");setActiveCategory(null);setMenuOpen(false);}} placeholder="🔍 Rechercher..."
+              style={{ width:"100%", padding:"8px 13px", background:"#2A1000", border:`1px solid ${G}`, borderRadius:2, color:CREAM, fontSize:12, fontFamily:"Georgia", outline:"none", boxSizing:"border-box" }}/>
+          </div>
+        )}
       </header>
+
+      {/* Mobile Menu */}
+      {isMobile && menuOpen && (
+        <div className="mobile-menu">
+          <button className="mobile-close" onClick={()=>setMenuOpen(false)}>✕</button>
+          <div style={{ marginTop:16, marginBottom:28 }}>
+            <div style={{ fontSize:20, fontWeight:"bold", color:G, letterSpacing:4 }}>BADAOUR</div>
+            <div style={{ fontSize:9, color:"#A0845C", letterSpacing:3 }}>L'AFRIQUE À VOTRE PORTE</div>
+          </div>
+          {navItems.map(({k,l})=>(
+            <div key={k} onClick={()=>{setPage(k);setMenuOpen(false);}}
+              style={{ padding:"16px 0", borderBottom:"1px solid #3A1F00", color:page===k?G:"#A0845C", fontSize:16, letterSpacing:2, textTransform:"uppercase", fontFamily:"Georgia", cursor:"pointer" }}>
+              {l}
+            </div>
+          ))}
+          <div onClick={()=>{setPage(currentUser?"compte":"auth");setMenuOpen(false);}}
+            style={{ padding:"16px 0", borderBottom:"1px solid #3A1F00", color:G, fontSize:16, letterSpacing:2, textTransform:"uppercase", fontFamily:"Georgia", cursor:"pointer" }}>
+            {currentUser ? `👤 ${currentUser.firstName}` : "👤 Connexion"}
+          </div>
+          <div style={{ marginTop:28, fontSize:11, color:"#A0845C" }}>
+            <div style={{ marginBottom:8 }}>📞 {PHONE}</div>
+            <div>✉️ {EMAIL}</div>
+          </div>
+        </div>
+      )}
 
       {/* ════════ HOME ════════ */}
       {page==="home"&&(
         <>
           {/* Hero */}
-          <div style={{ background:`linear-gradient(135deg,${DARK},${BROWN},${DARK})`, padding:"80px 60px", position:"relative", overflow:"hidden", borderBottom:`4px solid ${G}` }}>
+          <div className="hero-pad" style={{ background:`linear-gradient(135deg,${DARK},${BROWN},${DARK})`, position:"relative", overflow:"hidden", borderBottom:`4px solid ${G}` }}>
             <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"40%", backgroundImage:"repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(212,175,55,.04) 10px,rgba(212,175,55,.04) 20px)" }}/>
             <div style={{ maxWidth:580, position:"relative", animation:"fadeUp .6s ease" }}>
               <div style={{ fontSize:10, letterSpacing:5, color:G, textTransform:"uppercase", marginBottom:14, borderLeft:`3px solid ${G}`, paddingLeft:12 }}>ARTISANAT AFRICAIN · COMMERCE ÉTHIQUE · MONTRÉAL</div>
-              <h1 style={{ fontSize:54, fontWeight:"bold", color:CREAM, lineHeight:1.1, margin:"0 0 18px", textShadow:"0 2px 16px rgba(0,0,0,.5)" }}>
+              <h1 className="hero-h1" style={{ fontSize:54, fontWeight:"bold", color:CREAM, lineHeight:1.1, margin:"0 0 18px", textShadow:"0 2px 16px rgba(0,0,0,.5)" }}>
                 L'âme de l'Afrique,<br/><span style={{ color:G }}>livrée chez vous.</span>
               </h1>
-              <p style={{ fontSize:16, color:"#C4945C", lineHeight:1.8, maxWidth:440, marginBottom:30 }}>
+              <p style={{ fontSize: isMobile ? 14 : 16, color:"#C4945C", lineHeight:1.8, maxWidth:440, marginBottom:30 }}>
                 Habillement traditionnel, oeuvres d'art et produits africains authentiques. De l'Afrique au Canada, portés par des artisans passionnés.
               </p>
-              <div style={{ display:"flex", gap:12 }}>
+              <div className="hero-btns" style={{ display:"flex", gap:12 }}>
                 <button onClick={()=>setPage("boutique")} style={{ background:G, color:DARK, border:"none", padding:"14px 30px", fontSize:13, fontFamily:"Georgia", fontWeight:"bold", letterSpacing:2, cursor:"pointer", textTransform:"uppercase" }}>Découvrir la boutique</button>
                 <button onClick={()=>setPage("suivi")} style={{ background:"transparent", color:G, border:`2px solid ${G}`, padding:"14px 28px", fontSize:13, fontFamily:"Georgia", letterSpacing:2, cursor:"pointer", textTransform:"uppercase" }}>Suivre ma commande</button>
               </div>
             </div>
-            <div style={{ display:"flex", gap:48, marginTop:50, borderTop:"1px solid #3A1F00", paddingTop:30 }}>
+            <div className="grid-hero-stats" style={{ marginTop:50, borderTop:"1px solid #3A1F00", paddingTop:30 }}>
               {[["50+","Artisans partenaires"],["10+","Pays africains"],["100%","Éthique & Durable"],["4.9★","Note clients"]].map(([v,l])=>(
-                <div key={l}><div style={{ fontSize:26, color:G, fontWeight:"bold" }}>{v}</div><div style={{ fontSize:10, color:"#A0845C", letterSpacing:1, textTransform:"uppercase", marginTop:2 }}>{l}</div></div>
+                <div key={l}><div style={{ fontSize: isMobile ? 20 : 26, color:G, fontWeight:"bold" }}>{v}</div><div style={{ fontSize:10, color:"#A0845C", letterSpacing:1, textTransform:"uppercase", marginTop:2 }}>{l}</div></div>
               ))}
             </div>
           </div>
 
           {/* Categories */}
-          <div style={{ padding:"56px 60px 42px" }}>
+          <div className="section-pad" style={{ paddingBottom:42 }}>
             <div style={{ textAlign:"center", marginBottom:40 }}>
               <div style={{ fontSize:10, letterSpacing:5, color:RED, textTransform:"uppercase", marginBottom:8 }}>EXPLORER PAR UNIVERS</div>
-              <h2 style={{ fontSize:34, color:DARK, margin:0, fontWeight:"bold" }}>Nos 5 univers</h2>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, color:DARK, margin:0, fontWeight:"bold" }}>Nos 5 univers</h2>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:18 }}>
+            <div className="grid-5">
               {CATEGORIES.map(cat=>(
                 <div key={cat.key} className="hover-card" onClick={()=>{setActiveCategory(cat.key);setPage("boutique");setSearchQuery("");}}
-                  style={{ background:CREAM, border:"1px solid "+BORDER, borderTop:`5px solid ${cat.color}`, padding:"24px 20px", cursor:"pointer", textAlign:"center", transition:"transform .2s,box-shadow .2s" }}>
-                  <div style={{ fontSize:32, marginBottom:10 }}>{cat.emoji}</div>
-                  <div style={{ fontSize:15, fontWeight:"bold", color:DARK, marginBottom:5 }}>{cat.label}</div>
-                  <div style={{ fontSize:11, color:MUTED, lineHeight:1.5 }}>{cat.desc}</div>
+                  style={{ background:CREAM, border:"1px solid "+BORDER, borderTop:`5px solid ${cat.color}`, padding: isMobile ? "16px 12px" : "24px 20px", cursor:"pointer", textAlign:"center", transition:"transform .2s,box-shadow .2s" }}>
+                  <div style={{ fontSize: isMobile ? 24 : 32, marginBottom:10 }}>{cat.emoji}</div>
+                  <div style={{ fontSize: isMobile ? 12 : 15, fontWeight:"bold", color:DARK, marginBottom:5 }}>{cat.label}</div>
+                  {!isMobile && <div style={{ fontSize:11, color:MUTED, lineHeight:1.5 }}>{cat.desc}</div>}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Featured products — sample from each category */}
-          <div style={{ padding:"36px 60px 70px", background:BGALT }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:30 }}>
+          {/* Featured products */}
+          <div className="section-pad" style={{ background:BGALT, paddingBottom:70 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:30, flexWrap:"wrap", gap:12 }}>
               <div>
                 <div style={{ fontSize:10, letterSpacing:5, color:RED, textTransform:"uppercase", marginBottom:7 }}>COUP DE CŒUR</div>
-                <h2 style={{ fontSize:32, color:DARK, margin:0 }}>Sélection de la semaine</h2>
+                <h2 style={{ fontSize: isMobile ? 24 : 32, color:DARK, margin:0 }}>Sélection de la semaine</h2>
               </div>
               <button onClick={()=>{setPage("boutique");setActiveCategory(null);setSearchQuery("");}} style={{ background:"none", border:`2px solid ${RED}`, color:RED, padding:"8px 20px", cursor:"pointer", fontFamily:"Georgia", fontSize:12 }}>Voir tout →</button>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:22 }}>
+            <div className="grid-4">
               {[PRODUCTS[0],PRODUCTS[3],PRODUCTS[9],PRODUCTS[13]].map(p=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist}/>)}
             </div>
           </div>
 
           {/* Story */}
-          <div style={{ background:DARK, padding:"70px 60px", borderTop:`3px solid ${G}` }}>
+          <div style={{ background:DARK, padding: isMobile ? "40px 20px" : "70px 60px", borderTop:`3px solid ${G}` }}>
             <div style={{ maxWidth:660, margin:"0 auto", textAlign:"center" }}>
               <div style={{ fontSize:10, letterSpacing:5, color:G, textTransform:"uppercase", marginBottom:14 }}>NOTRE HISTOIRE</div>
-              <h2 style={{ fontSize:36, color:CREAM, lineHeight:1.3, marginBottom:20 }}>Né en Afrique,<br/>construit à <span style={{ color:G }}>Montréal.</span></h2>
+              <h2 style={{ fontSize: isMobile ? 26 : 36, color:CREAM, lineHeight:1.3, marginBottom:20 }}>Né en Afrique,<br/>construit à <span style={{ color:G }}>Montréal.</span></h2>
               <p style={{ fontSize:15, color:"#C4945C", lineHeight:2, marginBottom:30 }}>
                 BADAOUR est né d'un désir profond : relier la diaspora africaine à ses racines et offrir au monde la richesse de l'artisanat du continent. Chaque achat soutient directement un artisan, une famille, une communauté.
               </p>
-              <div style={{ display:"flex", gap:36, justifyContent:"center" }}>
+              <div style={{ display:"flex", gap: isMobile ? 18 : 36, justifyContent:"center", flexWrap:"wrap" }}>
                 {[["Commerce éthique","Rémunération juste"],["Impact direct","Soutien aux familles"],["Authenticité","Zéro intermédiaire"]].map(([t,s])=>(
                   <div key={t} style={{ textAlign:"center" }}>
                     <div style={{ width:38, height:2, background:G, margin:"0 auto 10px" }}/>
@@ -803,7 +923,7 @@ export default function BADAOUR() {
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop:34, display:"flex", justifyContent:"center", gap:16 }}>
+              <div style={{ marginTop:34, display:"flex", justifyContent:"center", gap:16, flexWrap:"wrap" }}>
                 <div style={{ background:"#1A1A00", border:`1px solid ${G}`, padding:"12px 20px", color:G, fontSize:12 }}>📞 {PHONE}</div>
                 <div style={{ background:"#1A1A00", border:`1px solid ${G}`, padding:"12px 20px", color:G, fontSize:12 }}>✉️ {EMAIL}</div>
               </div>
@@ -814,15 +934,15 @@ export default function BADAOUR() {
 
       {/* ════════ BOUTIQUE ════════ */}
       {page==="boutique"&&(
-        <div style={{ padding:"46px 56px" }}>
+        <div className="page-pad">
           <div style={{ marginBottom:28 }}>
             <div style={{ fontSize:10, letterSpacing:5, color:RED, textTransform:"uppercase", marginBottom:4 }}>BADAOUR</div>
-            <h1 style={{ fontSize:36, color:DARK, margin:"0 0 20px" }}>Notre Boutique</h1>
+            <h1 style={{ fontSize: isMobile ? 26 : 36, color:DARK, margin:"0 0 20px" }}>Notre Boutique</h1>
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-              <button className="cat-pill" onClick={()=>setActiveCategory(null)} style={{ background:!activeCategory?DARK:"transparent", color:!activeCategory?G:DARK, border:`2px solid ${DARK}`, padding:"6px 16px", fontFamily:"Georgia", fontSize:12, letterSpacing:1, transition:"background .2s,color .2s" }}>Tout</button>
+              <button className="cat-pill" onClick={()=>setActiveCategory(null)} style={{ background:!activeCategory?DARK:"transparent", color:!activeCategory?G:DARK, border:`2px solid ${DARK}`, padding: isMobile ? "5px 12px" : "6px 16px", fontFamily:"Georgia", fontSize: isMobile ? 11 : 12, letterSpacing:1, transition:"background .2s,color .2s" }}>Tout</button>
               {CATEGORIES.map(cat=>(
-                <button key={cat.key} className="cat-pill" onClick={()=>setActiveCategory(activeCategory===cat.key?null:cat.key)} style={{ background:activeCategory===cat.key?DARK:"transparent", color:activeCategory===cat.key?G:DARK, border:`2px solid ${DARK}`, padding:"6px 16px", fontFamily:"Georgia", fontSize:12, letterSpacing:1, display:"flex", alignItems:"center", gap:5, transition:"background .2s,color .2s" }}>
-                  {cat.emoji} {cat.label}
+                <button key={cat.key} className="cat-pill" onClick={()=>setActiveCategory(activeCategory===cat.key?null:cat.key)} style={{ background:activeCategory===cat.key?DARK:"transparent", color:activeCategory===cat.key?G:DARK, border:`2px solid ${DARK}`, padding: isMobile ? "5px 12px" : "6px 16px", fontFamily:"Georgia", fontSize: isMobile ? 11 : 12, letterSpacing:1, display:"flex", alignItems:"center", gap:5, transition:"background .2s,color .2s" }}>
+                  {cat.emoji} {isMobile ? cat.label.split(" ").slice(-1)[0] : cat.label}
                 </button>
               ))}
             </div>
@@ -834,7 +954,7 @@ export default function BADAOUR() {
           )}
           {filteredProducts.length===0
             ?<div style={{ textAlign:"center", padding:70, color:MUTED }}><div style={{ fontSize:44 }}>🔍</div><div style={{ fontSize:17, marginTop:12 }}>Aucun produit trouvé</div></div>
-            :<div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:22 }}>
+            :<div className="grid-4">
               {filteredProducts.map(p=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWishlist={toggleWishlist}/>)}
             </div>
           }
@@ -843,12 +963,12 @@ export default function BADAOUR() {
 
       {/* ════════ ARTISANS ════════ */}
       {page==="artisans"&&(
-        <div style={{ padding:"56px 60px" }}>
+        <div className="section-pad">
           <div style={{ marginBottom:40 }}>
             <div style={{ fontSize:10, letterSpacing:5, color:RED, textTransform:"uppercase", marginBottom:4 }}>CEUX QUI CRÉENT</div>
-            <h1 style={{ fontSize:36, color:DARK, margin:0 }}>Nos Artisans</h1>
+            <h1 style={{ fontSize: isMobile ? 26 : 36, color:DARK, margin:0 }}>Nos Artisans</h1>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24, marginBottom:50 }}>
+          <div className="grid-3" style={{ marginBottom:50 }}>
             {[
               { n:"Moussa Diallo", m:"Tailleur brodeur", v:"Dakar, Sénégal", e:"✂️", a:"23 ans", h:"Formé par son père, Moussa perpétue l'art du grand boubou. Chaque broderie prend 4 jours de travail." },
               { n:"Fatoumata Koné", m:"Artisane bogolan", v:"Bamako, Mali", e:"🎨", a:"18 ans", h:"Fatoumata ressuscite les motifs anciens du bogolan peint à la boue. Son travail est exposé en France et au Canada." },
@@ -878,7 +998,7 @@ export default function BADAOUR() {
 
       {/* ════════ AUTH ════════ */}
       {page==="auth"&&(
-        <div style={{ padding:"60px 40px", maxWidth:480, margin:"0 auto" }}>
+        <div className="page-pad" style={{ maxWidth:480, margin:"0 auto" }}>
           <div style={{ marginBottom:30, textAlign:"center" }}>
             <div style={{ fontSize:10, letterSpacing:5, color:RED, textTransform:"uppercase", marginBottom:5 }}>ESPACE CLIENT</div>
             <h1 style={{ fontSize:34, color:DARK, margin:0 }}>{authMode==="login"?"Connexion":"Créer un compte"}</h1>
@@ -918,18 +1038,18 @@ export default function BADAOUR() {
 
       {/* ════════ COMPTE CLIENT ════════ */}
       {page==="compte"&&currentUser&&(
-        <div style={{ padding:"50px 60px", maxWidth:900, margin:"0 auto" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:36 }}>
+        <div className="page-pad" style={{ maxWidth:900, margin:"0 auto" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:36, flexWrap:"wrap", gap:12 }}>
             <div>
               <div style={{ fontSize:10, letterSpacing:5, color:RED, textTransform:"uppercase", marginBottom:4 }}>MON ESPACE</div>
-              <h1 style={{ fontSize:34, color:DARK, margin:0 }}>Bonjour, {currentUser.firstName} 👋</h1>
+              <h1 style={{ fontSize: isMobile ? 24 : 34, color:DARK, margin:0 }}>Bonjour, {currentUser.firstName} 👋</h1>
               <div style={{ fontSize:13, color:MUTED, marginTop:5 }}>📧 {currentUser.email}</div>
             </div>
             <button onClick={()=>{setCurrentUser(null);setPage("home");toast("Déconnexion réussie","info");}} style={{ background:"transparent", border:`2px solid ${BORDER}`, color:MUTED, padding:"9px 18px", fontFamily:"Georgia", fontSize:12, cursor:"pointer" }}>Se déconnecter</button>
           </div>
 
           {/* Stats */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:18, marginBottom:36 }}>
+          <div className="grid-stats" style={{ marginBottom:36 }}>
             {[
               ["📦", "Commandes", (accounts.find(u=>u.email===currentUser.email)?.orders||[]).length+""],
               ["❤️", "Liste de souhaits", wishlist.length+" article(s)"],
@@ -968,7 +1088,7 @@ export default function BADAOUR() {
           {wishlist.length>0&&(
             <div style={{ background:CREAM, border:"1px solid "+BORDER, padding:"26px 28px" }}>
               <h3 style={{ fontSize:16, color:DARK, margin:"0 0 18px", letterSpacing:1, textTransform:"uppercase" }}>❤️ Ma liste de souhaits</h3>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
+              <div className="grid-4">
                 {PRODUCTS.filter(p=>wishlist.includes(p.id)).map(p=>(
                   <div key={p.id} style={{ border:"1px solid "+BORDER, padding:"14px", textAlign:"center" }}>
                     <div style={{ width:60, height:60, background:`linear-gradient(135deg,${BROWN},${RED})`, margin:"0 auto 8px", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -987,7 +1107,7 @@ export default function BADAOUR() {
 
       {/* ════════ PANIER / CHECKOUT ════════ */}
       {page==="panier"&&(
-        <div style={{ padding:"44px 50px", maxWidth:1020, margin:"0 auto" }}>
+        <div className="page-pad" style={{ maxWidth:1020, margin:"0 auto" }}>
           {/* Steps */}
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", marginBottom:40, gap:0 }}>
             {["cart","info","payment"].map((k,i)=>{
@@ -1005,7 +1125,7 @@ export default function BADAOUR() {
           </div>
 
           {payStep==="cart"&&(
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 320px", gap:26 }}>
+            <div className="grid-checkout">
               <div>
                 <h2 style={{ fontSize:26, color:DARK, marginBottom:18 }}>Mon Panier</h2>
                 {cart.length===0
@@ -1042,7 +1162,7 @@ export default function BADAOUR() {
           )}
 
           {payStep==="info"&&(
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 280px", gap:26 }}>
+            <div className="grid-checkout-sm">
               <div>
                 <h2 style={{ fontSize:26, color:DARK, marginBottom:18 }}>Informations de livraison</h2>
                 <div style={{ background:CREAM, border:"1px solid "+BORDER, padding:"28px 32px" }}>
@@ -1066,7 +1186,7 @@ export default function BADAOUR() {
           )}
 
           {payStep==="payment"&&(
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 280px", gap:26 }}>
+            <div className="grid-checkout-sm">
               <div>
                 <h2 style={{ fontSize:26, color:DARK, marginBottom:18 }}>Mode de paiement</h2>
                 <div style={{ background:CREAM, border:"1px solid "+BORDER, padding:"28px 32px" }}>
@@ -1144,7 +1264,7 @@ export default function BADAOUR() {
 
       {/* ════════ SUIVI ════════ */}
       {page==="suivi"&&(
-        <div style={{ padding:"56px 60px", maxWidth:820, margin:"0 auto" }}>
+        <div className="section-pad" style={{ maxWidth:820, margin:"0 auto" }}>
           <div style={{ marginBottom:32 }}>
             <div style={{ fontSize:10,letterSpacing:5,color:RED,textTransform:"uppercase",marginBottom:4 }}>EN TEMPS RÉEL</div>
             <h1 style={{ fontSize:36,color:DARK,margin:"0 0 8px" }}>Suivi de commande</h1>
@@ -1207,7 +1327,7 @@ export default function BADAOUR() {
 
       {/* ════════ COMMANDE SUR MESURE ════════ */}
       {page==="commande"&&(
-        <div style={{ padding:"56px 60px", maxWidth:740, margin:"0 auto" }}>
+        <div className="section-pad" style={{ maxWidth:740, margin:"0 auto" }}>
           <div style={{ marginBottom:28 }}>
             <div style={{ fontSize:10,letterSpacing:5,color:RED,textTransform:"uppercase",marginBottom:4 }}>PERSONNALISÉ</div>
             <h1 style={{ fontSize:36,color:DARK,margin:"0 0 8px" }}>Commande sur mesure</h1>
@@ -1245,8 +1365,8 @@ export default function BADAOUR() {
       )}
 
       {/* ── FOOTER ── */}
-      <footer style={{ background:"#0D0500",color:"#A0845C",padding:"44px 56px 24px",borderTop:"3px solid #3A1F00",marginTop:60 }}>
-        <div style={{ display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:32,marginBottom:30 }}>
+      <footer style={{ background:"#0D0500",color:"#A0845C",padding: isMobile ? "32px 20px 20px" : "44px 56px 24px",borderTop:"3px solid #3A1F00",marginTop:60 }}>
+        <div className="grid-footer" style={{ marginBottom:30 }}>
           <div>
             <div style={{ fontSize:20,color:G,letterSpacing:4,fontWeight:"bold",marginBottom:12 }}>BADAOUR</div>
             <p style={{ fontSize:12,lineHeight:1.9,color:MUTED }}>L'Afrique à votre porte. Commerce éthique, artisanat authentique, livraison partout au Canada.</p>

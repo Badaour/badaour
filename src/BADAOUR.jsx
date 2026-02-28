@@ -380,7 +380,7 @@ export default function BADAOURPublic() {
           <div><div style={{fontSize:18,color:G,letterSpacing:4,fontWeight:"bold",marginBottom:8}}>BADAOUR</div><p style={{fontSize:11,lineHeight:1.8,color:MUTED}}>L'Afrique à votre porte.</p><div style={{marginTop:8,fontSize:11,color:MUTED}}>📞 {PHONE}<br/>✉️ {EMAIL}</div></div>
           {!mobile&&[["Boutique",["Homme","Femme","Enfant","Art","Divers"]],["Aide",["Livraison","Retours","FAQ","Contact"]]].map(([t,links])=>(<div key={t}><div style={{color:G,fontWeight:"bold",letterSpacing:2,fontSize:9,textTransform:"uppercase",marginBottom:8}}>{t}</div>{links.map(l=><div key={l} style={{color:MUTED,fontSize:11,marginBottom:5,cursor:"pointer"}}>{l}</div>)}</div>))}
         </div>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+px,borderTop:"1px solid #3A1F00",paddingTop:10,display:"flex",justifyContent:"space-between",fontSize:9,flexWrap:"wrap",gap:4}}><span>© 2025 BADAOUR · Montréal</span><span style={{color:G}}>❤️ Diaspora africaine</span></div>
+        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+px,borderTop:"1px solid #3A1F00",paddingTop:10,display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:9,flexWrap:"wrap",gap:4}}><span>© 2025 BADAOUR · Montréal</span><a href="#/admin" style={{color:"#3A1F00",textDecoration:"none",cursor:"pointer",fontSize:8,padding:"2px 8px",borderRadius:4,transition:"color 0.3s"}} onMouseEnter={e=>e.target.style.color="#D4AF37"} onMouseLeave={e=>e.target.style.color="#3A1F00"}>⚙️ Admin</a><span style={{color:G}}>❤️ Diaspora africaine</span></div>
       </footer>
     </div>
   );

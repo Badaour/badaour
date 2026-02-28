@@ -77,7 +77,7 @@ const HERO_ADINKRA=[
   {d:"M0,20 Q20,0 40,20 Q20,40 0,20",x:32,y:88,size:28,delay:0},
 ];
 
-const DEMO_ORDERS = [{ id:"BDR-2026-0042", date:"2026-01-10", status:"transit", items:[{...PRODUCTS[0],qty:1},{...PRODUCTS[3],qty:1}], total:355.25, shipping:18, client:"Mamadou Diallo", address:"4500 Rue Sherbrooke, Montréal, QC H3Z 1E3", payMethod:"Interac", events:[{step:"confirmed",date:"10 jan, 09:14",note:"Paiement reçu"},{step:"preparation",date:"11 jan, 14:30",note:"Artisan a commencé"},{step:"shipped",date:"15 jan, 11:00",note:"DHL Express Dakar"},{step:"transit",date:"16 jan, 03:22",note:"Vol Dakar → Montréal"}] }];
+const DEMO_ORDERS = [{ id:"BDR-2026-0042", date:"2026-01-10", status:"transit", items:[{id:1,name:"Grand Boubou Brodé",price:189,artisan:"Moussa Diallo",country:"Sénégal",emoji:"👘",qty:1},{id:4,name:"Robe Wax Élégance",price:134,artisan:"Fatoumata Koné",country:"Mali",emoji:"👗",qty:1}], total:355.25, shipping:18, client:"Mamadou Diallo", address:"4500 Rue Sherbrooke, Montréal, QC H3Z 1E3", payMethod:"Interac", events:[{step:"confirmed",date:"10 jan, 09:14",note:"Paiement reçu"},{step:"preparation",date:"11 jan, 14:30",note:"Artisan a commencé"},{step:"shipped",date:"15 jan, 11:00",note:"DHL Express Dakar"},{step:"transit",date:"16 jan, 03:22",note:"Vol Dakar → Montréal"}] }];
 
 function genId(){ return "BDR-2026-"+String(Math.floor(Math.random()*9000)+1000); }
 

@@ -127,9 +127,11 @@ function ProductCard({p,addToCart,wishlist,toggleWish,style:extraStyle}){
   return(
     <div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
       style={{background:T.white,borderRadius:16,overflow:"hidden",transition:"transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s",transform:hover?"translateY(-8px) scale(1.01)":"none",boxShadow:hover?"0 24px 48px rgba(12,10,8,.12)":"0 2px 8px rgba(12,10,8,.04)",cursor:"pointer",position:"relative",...extraStyle}}>
-      <div style={{height:220,background:p.gradient,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 70%,rgba(255,255,255,.08) 0%,transparent 50%)"}}/>
-        <span style={{fontSize:80,filter:"drop-shadow(0 8px 24px rgba(0,0,0,.3))",transition:"transform .4s cubic-bezier(.2,.8,.2,1)",transform:hover?"scale(1.15) rotate(-5deg)":"scale(1)"}}>{p.emoji}</span>
+      <div style={{height:220,background:p.gradient||"#1A1714",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
+        {p.photos&&p.photos.length>0
+          ? <img src={p.photos[0].url} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",transition:"transform .4s cubic-bezier(.2,.8,.2,1)",transform:hover?"scale(1.08)":"scale(1)"}}/>
+          : <><div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 30% 70%,rgba(255,255,255,.08) 0%,transparent 50%)"}}/><span style={{fontSize:80,filter:"drop-shadow(0 8px 24px rgba(0,0,0,.3))",transition:"transform .4s cubic-bezier(.2,.8,.2,1)",transform:hover?"scale(1.15) rotate(-5deg)":"scale(1)"}}>{p.emoji}</span></>
+        }
         <div style={{position:"absolute",top:14,left:14,background:tagMap[p.tag]||"#666",color:"#fff",padding:"4px 12px",fontSize:10,fontWeight:700,letterSpacing:"1px",borderRadius:100,textTransform:"uppercase"}}>{p.tag}</div>
         <div style={{position:"absolute",top:14,right:14,background:"rgba(0,0,0,.35)",backdropFilter:"blur(8px)",color:"#fff",padding:"4px 10px",fontSize:10,borderRadius:100,letterSpacing:".5px"}}>🌍 {p.country}</div>
         <button onClick={(e)=>{e.stopPropagation();toggleWish(p.id);}} style={{position:"absolute",bottom:14,right:14,background:"rgba(255,255,255,.9)",backdropFilter:"blur(8px)",border:"none",borderRadius:"50%",width:36,height:36,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",transition:"transform .2s",transform:hover?"scale(1.1)":"scale(1)"}}>{inWish?"❤️":"🤍"}</button>
@@ -638,7 +640,9 @@ export default function BADAOUR(){
                 {cart.length===0?<div style={{textAlign:"center",padding:60,color:T.muted,background:T.white,borderRadius:16}}><div style={{fontSize:44}}>🛒</div><div style={{fontSize:16,marginTop:14,fontFamily:"'Playfair Display',Georgia,serif"}}>Votre panier est vide</div><button onClick={()=>setPage("boutique")} style={{marginTop:20,background:T.dark,color:"#fff",border:"none",padding:"12px 28px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,borderRadius:100}}>EXPLORER →</button></div>
                 :cart.map(item=>(
                   <div key={item.id} style={{background:T.white,border:`1px solid ${T.border}`,borderRadius:14,padding:"18px 20px",marginBottom:12,display:"flex",alignItems:"center",gap:16,transition:"all .2s"}}>
-                    <div style={{width:56,height:56,borderRadius:12,background:item.gradient,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>{item.emoji}</div>
+                    <div style={{width:56,height:56,borderRadius:12,background:item.gradient||"#1A1714",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0,overflow:"hidden"}}>
+                      {item.photos&&item.photos.length>0?<img src={item.photos[0].url} alt={item.name} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:12}}/>:item.emoji}
+                    </div>
                     <div style={{flex:1,minWidth:0}}><div style={{fontSize:15,fontWeight:700,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif"}}>{item.name}</div><div style={{fontSize:12,color:T.muted}}>✂️ {item.artisan}</div></div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <button onClick={()=>updateQty(item.id,-1)} style={{width:30,height:30,border:`1px solid ${T.border}`,background:T.white,cursor:"pointer",fontSize:15,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>

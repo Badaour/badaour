@@ -1,439 +1,749 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
 
-// ═══════════════════════════════════════════════════════════════
-// BADAOUR — BOUTIQUE PUBLIQUE (données persistantes)
-// ═══════════════════════════════════════════════════════════════
+// ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
+const T = {
+  gold:"#C9A84C",goldLight:"#E8D5A0",
+  black:"#0C0A08",dark:"#14120F",charcoal:"#1E1C18",sidebar:"#18160F",
+  cream:"#FAF7F2",ivory:"#F5F0E8",sand:"#E8DFD0",
+  terra:"#A0522D",wine:"#6B1D2A",green:"#2D6A4F",emerald:"#40916C",
+  muted:"#8A7E6E",border:"#E4DDD0",bg:"#FAFAF8",
+  white:"#FFFFFF",blue:"#2563EB",red:"#DC2626",orange:"#EA580C",
+};
 
-const G = "#D4AF37", DARK = "#1A0A00", RED = "#8B1A00", CREAM = "#FFF8EE";
-const BG = "#FDF6EC", BGALT = "#F5ECD9", BORDER = "#E8D5B7", MUTED = "#8B6A3E";
-const GREEN = "#2E8B57", BROWN = "#3D1A00";
-const PHONE = "438-988-6682", EMAIL = "service@badaour.com";
+const PHONE="438-988-6682";const EMAIL="service@badaour.com";
 
-const DEFAULT_PRODUCTS = [
-  {id:1,name:"Grand Boubou Brodé",category:"homme",sub:"Boubou",artisan:"Moussa Diallo",city:"Dakar",country:"Sénégal",price:189,stock:12,tag:"Bestseller",desc:"Broderie main sur bazin riche, teinture naturelle indigo.",rating:4.8,color:"#1A3A6B"},
-  {id:2,name:"Dashiki Festif",category:"homme",sub:"Chemise",artisan:"Koffi Asante",city:"Accra",country:"Ghana",price:78,stock:25,tag:"Nouveau",desc:"Coton léger brodé, col en V, manches courtes.",rating:4.6,color:"#E74C3C"},
-  {id:3,name:"Agbada Cérémonie",category:"homme",sub:"Tenue complète",artisan:"Adebayo Okafor",city:"Lagos",country:"Nigeria",price:245,stock:5,tag:"Premium",desc:"Ensemble 3 pièces broderie dorée.",rating:4.9,color:"#6B2FA0"},
-  {id:4,name:"Robe Wax Élégance",category:"femme",sub:"Robe",artisan:"Fatoumata Koné",city:"Bamako",country:"Mali",price:134,stock:18,tag:"Bestseller",desc:"Robe droite en wax hollandais, ceinture tissée.",rating:4.7,color:"#E74C3C"},
-  {id:5,name:"Ensemble Bogolan Chic",category:"femme",sub:"Ensemble",artisan:"Awa Traoré",city:"Bamako",country:"Mali",price:168,stock:8,tag:"Artisanal",desc:"Haut et jupe assortis en bogolan peint à la main.",rating:4.8,color:"#8B5E3C"},
-  {id:6,name:"Kaftan Soirée Brodé",category:"femme",sub:"Kaftan",artisan:"Aïcha Diop",city:"Dakar",country:"Sénégal",price:212,stock:6,tag:"Premium",desc:"Kaftan voile de coton, broderie au fil d'or.",rating:4.9,color:"#1A1060"},
-  {id:7,name:"Mini Boubou Enfant",category:"enfant",sub:"Boubou",artisan:"Moussa Diallo",city:"Dakar",country:"Sénégal",price:64,stock:30,tag:"Populaire",desc:"Version enfant. Tissu doux coton. 2 à 12 ans.",rating:4.5,color:"#27AE60"},
-  {id:8,name:"Robe Wax Princesse",category:"enfant",sub:"Robe",artisan:"Koffi Mensah",city:"Lomé",country:"Togo",price:52,stock:22,tag:"Nouveau",desc:"Robe à volants en wax coloré. 3 à 10 ans.",rating:4.6,color:"#E91E8C"},
-  {id:9,name:"Ensemble Kente Junior",category:"enfant",sub:"Ensemble",artisan:"Kweku Mensah",city:"Kumasi",country:"Ghana",price:89,stock:14,tag:"Premium",desc:"Ensemble kente tissé main. 4 à 14 ans.",rating:4.7,color:"#F4A300"},
-  {id:10,name:"Masque Baoulé Ancien",category:"art",sub:"Masque",artisan:"Cheikh Ndiaye",city:"Thiès",country:"Sénégal",price:320,stock:3,tag:"Unique",desc:"Masque Goli sculpté, bois de venn.",rating:5.0,color:"#6B2800"},
-  {id:11,name:"Sculpture Baobab",category:"art",sub:"Sculpture",artisan:"Cheikh Ndiaye",city:"Thiès",country:"Sénégal",price:275,stock:4,tag:"Artisanal",desc:"Baobab sculpté ébène, base laiton.",rating:4.9,color:"#4A2800"},
-  {id:12,name:"Tableau Toile d'Afrique",category:"art",sub:"Tableau",artisan:"Ibrahima Sow",city:"Dakar",country:"Sénégal",price:195,stock:7,tag:"Nouveau",desc:"Peinture acrylique sur toile, thème village.",rating:4.7,color:"#E67E22"},
-  {id:13,name:"Collier Krobo Perles",category:"divers",sub:"Bijou",artisan:"Abena Asante",city:"Accra",country:"Ghana",price:86,stock:20,tag:"Populaire",desc:"Perles Krobo faites à la flamme.",rating:4.6,color:"#D4AF37"},
-  {id:14,name:"Sac Bogolan Cuir",category:"divers",sub:"Sac",artisan:"Fatoumata Koné",city:"Bamako",country:"Mali",price:112,stock:11,tag:"Artisanal",desc:"Sac bogolan, cuir tannage végétal.",rating:4.8,color:"#8B5E3C"},
-  {id:15,name:"Huile de Karité Pure",category:"divers",sub:"Beauté",artisan:"Mariam Ouédraogo",city:"Ouaga",country:"Burkina Faso",price:34,stock:45,tag:"Bio",desc:"Karité brut non raffiné. 200ml.",rating:4.4,color:"#E8D5A0"},
-  {id:16,name:"Tissu Wax 6 yards",category:"divers",sub:"Tissu",artisan:"Koffi Mensah",city:"Lomé",country:"Togo",price:58,stock:35,tag:"Populaire",desc:"Wax hollandais double face. 6 yards.",rating:4.5,color:"#E74C3C"},
+const CATS=[
+  {key:"homme",label:"Homme",emoji:"👘",color:"#1A3A6B"},
+  {key:"femme",label:"Femme",emoji:"👗",color:T.wine},
+  {key:"enfant",label:"Enfant",emoji:"🧒",color:T.green},
+  {key:"art",label:"Art",emoji:"🏺",color:"#6A0572"},
+  {key:"divers",label:"Divers",emoji:"✨",color:T.gold},
 ];
 
-const CATEGORIES = [
-  {key:"homme",label:"Homme",full:"Habillement Homme",emoji:"👘",color:"#1A3A6B",desc:"Boubous, dashikis, agbadas"},
-  {key:"femme",label:"Femme",full:"Habillement Femme",emoji:"👗",color:"#8B1A00",desc:"Robes wax, kaftans, bogolan"},
-  {key:"enfant",label:"Enfant",full:"Habillement Enfant",emoji:"🧒",color:"#27AE60",desc:"Boubous, robes, ensembles"},
-  {key:"art",label:"Art",full:"Oeuvres d'Art",emoji:"🏺",color:"#6A0572",desc:"Sculptures, masques, tableaux"},
-  {key:"divers",label:"Divers",full:"Divers & Accessoires",emoji:"✨",color:"#D4AF37",desc:"Bijoux, sacs, tissus, beauté"},
+const STATUS_MAP={confirmed:{l:"Confirmée",c:T.green},preparation:{l:"Préparation",c:T.terra},shipped:{l:"Expédiée",c:T.blue},transit:{l:"En transit",c:"#6A0572"},customs:{l:"Dédouanement",c:T.orange},delivery:{l:"En livraison",c:T.blue},delivered:{l:"Livré",c:T.green}};
+
+const initProducts=[
+  {id:1,name:"Grand Boubou Brodé",category:"homme",sub:"Boubou",artisan:"Moussa Diallo",city:"Dakar",country:"Sénégal",price:189,stock:12,sold:47,tag:"Best",desc:"Broderie main sur bazin riche, teinture naturelle indigo.",emoji:"👘",photos:[]},
+  {id:2,name:"Dashiki Festif",category:"homme",sub:"Chemise",artisan:"Koffi Asante",city:"Accra",country:"Ghana",price:78,stock:25,sold:33,tag:"Nouveau",desc:"Coton léger brodé, col en V, manches courtes.",emoji:"👔",photos:[]},
+  {id:3,name:"Agbada Cérémonie",category:"homme",sub:"Tenue complète",artisan:"Adebayo Okafor",city:"Lagos",country:"Nigeria",price:245,stock:5,sold:18,tag:"Premium",desc:"Ensemble 3 pièces : robe, tunique et pantalon.",emoji:"🎩",photos:[]},
+  {id:4,name:"Robe Wax Élégance",category:"femme",sub:"Robe",artisan:"Fatoumata Koné",city:"Bamako",country:"Mali",price:134,stock:18,sold:62,tag:"Best",desc:"Robe droite en wax hollandais, ceinture tissée.",emoji:"👗",photos:[]},
+  {id:5,name:"Ensemble Bogolan Chic",category:"femme",sub:"Ensemble",artisan:"Awa Traoré",city:"Bamako",country:"Mali",price:168,stock:8,sold:24,tag:"Artisanal",desc:"Haut et jupe assortis en bogolan peint à la main.",emoji:"✨",photos:[]},
+  {id:6,name:"Kaftan Soirée Brodé",category:"femme",sub:"Kaftan",artisan:"Aïcha Diop",city:"Dakar",country:"Sénégal",price:212,stock:6,sold:31,tag:"Premium",desc:"Kaftan en voile de coton, broderies au fil d'or.",emoji:"🌸",photos:[]},
+  {id:7,name:"Mini Boubou Enfant",category:"enfant",sub:"Boubou",artisan:"Moussa Diallo",city:"Dakar",country:"Sénégal",price:64,stock:30,sold:55,tag:"Populaire",desc:"Version enfant du grand boubou. Coton lavable.",emoji:"👶",photos:[]},
+  {id:8,name:"Robe Wax Princesse",category:"enfant",sub:"Robe",artisan:"Koffi Mensah",city:"Lomé",country:"Togo",price:52,stock:20,sold:38,tag:"Nouveau",desc:"Robe à volants en wax coloré. 3-10 ans.",emoji:"🎀",photos:[]},
+  {id:9,name:"Ensemble Kente Junior",category:"enfant",sub:"Ensemble",artisan:"Kweku Mensah",city:"Kumasi",country:"Ghana",price:88,stock:10,sold:22,tag:"Artisanal",desc:"Ensemble kente authentique tissé main.",emoji:"🧒",photos:[]},
+  {id:10,name:"Masque Ancestral Sénoufo",category:"art",sub:"Masque",artisan:"Cheikh Ndiaye",city:"Thiès",country:"Sénégal",price:320,stock:3,sold:8,tag:"Unique",desc:"Masque cérémoniel sculpté. Bois de venn.",emoji:"🎭",photos:[]},
+  {id:11,name:"Sculpture Baobab Bronze",category:"art",sub:"Sculpture",artisan:"Cheikh Ndiaye",city:"Thiès",country:"Sénégal",price:445,stock:4,sold:5,tag:"Premium",desc:"Baobab bronze coulé, socle ébène.",emoji:"🌳",photos:[]},
+  {id:12,name:"Tableau Sahel Acrylique",category:"art",sub:"Tableau",artisan:"Amadou Sow",city:"Nouakchott",country:"Mauritanie",price:278,stock:2,sold:11,tag:"Artisanal",desc:"Acrylique sur toile 80×60cm.",emoji:"🖼️",photos:[]},
+  {id:13,name:"Collier Perles Krobo",category:"divers",sub:"Bijoux",artisan:"Abena Asante",city:"Accra",country:"Ghana",price:86,stock:15,sold:44,tag:"Artisanal",desc:"Perles verre recyclé, techniques Krobo.",emoji:"📿",photos:[]},
+  {id:14,name:"Sac Bogolan Cuir",category:"divers",sub:"Sac",artisan:"Fatoumata Koné",city:"Bamako",country:"Mali",price:112,stock:9,sold:28,tag:"Artisanal",desc:"Sac bogolan, cuir tannage végétal.",emoji:"👜",photos:[]},
+  {id:15,name:"Huile de Karité Pure",category:"divers",sub:"Beauté",artisan:"Mariam Ouédraogo",city:"Ouagadougou",country:"Burkina Faso",price:34,stock:50,sold:120,tag:"Bio",desc:"Karité brut non raffiné. 200ml.",emoji:"🧴",photos:[]},
+  {id:16,name:"Tissu Wax 6 yards",category:"divers",sub:"Tissu",artisan:"Koffi Mensah",city:"Lomé",country:"Togo",price:58,stock:35,sold:88,tag:"Populaire",desc:"Wax hollandais double face. 6 yards.",emoji:"🧵",photos:[]},
 ];
 
-const ARTISANS = [
-  {name:"Moussa Diallo",craft:"Tailleur brodeur",city:"Dakar",country:"Sénégal",exp:23,bio:"Formé par son père, Moussa perpétue l'art du grand boubou."},
-  {name:"Fatoumata Koné",craft:"Artisane bogolan",city:"Bamako",country:"Mali",exp:18,bio:"Ressuscite les motifs anciens du bogolan peint à la boue."},
-  {name:"Abena Asante",craft:"Perlière Krobo",city:"Accra",country:"Ghana",exp:15,bio:"Dirige une coopérative de 12 femmes artisanes."},
-  {name:"Cheikh Ndiaye",craft:"Sculpteur sur bois",city:"Thiès",country:"Sénégal",exp:30,bio:"Maître sculpteur, pièces uniques en bois de venn."},
-  {name:"Kweku Mensah",craft:"Tisserand kente",city:"Kumasi",country:"Ghana",exp:25,bio:"Gardien de la tradition kente du peuple Ashanti."},
-  {name:"Aïcha Diop",craft:"Couturière haute couture",city:"Dakar",country:"Sénégal",exp:20,bio:"Allie couture traditionnelle et tendances contemporaines."},
-  {name:"Koffi Mensah",craft:"Tisserand / Tailleur",city:"Lomé",country:"Togo",exp:12,bio:"Spécialiste wax et couture enfant."},
-  {name:"Mariam Ouédraogo",craft:"Productrice karité",city:"Ouaga",country:"Burkina Faso",exp:10,bio:"Coopérative de femmes, karité 100% bio."},
+const initOrders=[
+  {id:"BDR-2026-0042",date:"2026-01-10",status:"transit",client:"Mamadou Diallo",email:"mamadou@test.com",address:"4500 Sherbrooke, Montréal QC",items:[{name:"Grand Boubou Brodé",qty:1,price:189},{name:"Robe Wax Élégance",qty:1,price:134}],total:355.25,payMethod:"Interac"},
+  {id:"BDR-2026-0038",date:"2026-01-08",status:"delivered",client:"Aïssata Camara",email:"aissata@test.com",address:"1200 Av. des Pins, Montréal QC",items:[{name:"Kaftan Soirée Brodé",qty:1,price:212}],total:264.78,payMethod:"Carte"},
+  {id:"BDR-2026-0035",date:"2026-01-05",status:"preparation",client:"Omar Sy",email:"omar@test.com",address:"550 Blvd René-Lévesque, Montréal QC",items:[{name:"Masque Sénoufo",qty:1,price:320},{name:"Collier Krobo",qty:2,price:86}],total:536.12,payMethod:"PayPal"},
 ];
 
-const TRACKING_STEPS = [
-  {key:"confirmed",label:"Commande confirmée",icon:"✅",desc:"Reçue et validée"},
-  {key:"preparation",label:"En préparation",icon:"🧵",desc:"L'artisan prépare"},
-  {key:"shipped",label:"Expédiée",icon:"📦",desc:"Colis parti"},
-  {key:"transit",label:"En transit",icon:"✈️",desc:"Vol Afrique → Canada"},
-  {key:"customs",label:"Dédouanement",icon:"🛃",desc:"Douanes canadiennes"},
-  {key:"delivery",label:"En livraison",icon:"🚚",desc:"En route chez vous"},
-  {key:"delivered",label:"Livré !",icon:"🎉",desc:"Colis livré"},
-];
+// ─── PHOTO UPLOADER COMPONENT ─────────────────────────────────────────────
+function PhotoUploader({photos=[],onChange,maxPhotos=8}){
+  const fileRef=useRef(null);
 
-const tagColors = {Bestseller:G,Nouveau:GREEN,Artisanal:"#8B4513",Populaire:"#C0392B",Unique:"#6A0572",Bio:"#228B22",Premium:"#1A3A6B"};
-const statusLabels = {confirmed:"Confirmée",preparation:"Préparation",shipped:"Expédiée",transit:"En transit ✈️",customs:"Dédouanement",delivery:"En livraison",delivered:"Livré ✓"};
-const fmt = v => Number(v).toFixed(2);
+  const handleFiles=(e)=>{
+    const files=Array.from(e.target.files);
+    const remaining=maxPhotos-photos.length;
+    const toProcess=files.slice(0,remaining);
+    toProcess.forEach(file=>{
+      if(!file.type.startsWith("image/"))return;
+      if(file.size>5*1024*1024){alert(`${file.name} dépasse 5MB`);return;}
+      const reader=new FileReader();
+      reader.onload=(ev)=>{
+        onChange(prev=>[...prev,{id:Date.now()+Math.random(),url:ev.target.result,name:file.name,size:(file.size/1024).toFixed(0)+"KB"}]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value="";
+  };
 
-function useScreen(){const[w,setW]=useState(typeof window!=="undefined"?window.innerWidth:1200);useEffect(()=>{const h=()=>setW(window.innerWidth);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);return{w,mobile:w<768,tablet:w>=768&&w<1024,desktop:w>=1024};}
+  const removePhoto=(id)=>onChange(prev=>prev.filter(p=>p.id!==id));
 
-// ─── STORAGE HELPERS ───
-async function loadData(key, fallback) {
-  try {
-    const r = await window.storage.get("badaour:" + key, true);
-    return r ? JSON.parse(r.value) : fallback;
-  } catch { return fallback; }
-}
-async function saveData(key, value) {
-  try { await window.storage.set("badaour:" + key, JSON.stringify(value), true); } catch(e) { console.warn("Storage save error", e); }
-}
+  const movePhoto=(idx,dir)=>{
+    onChange(prev=>{
+      const arr=[...prev];
+      const newIdx=idx+dir;
+      if(newIdx<0||newIdx>=arr.length)return arr;
+      [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
+      return arr;
+    });
+  };
 
-// ─── PRODUCT CARD ───
-function ProductCard({p, addToCart, wishlist, toggleWish, mobile}) {
-  const [added, setAdded] = useState(false);
-  const outOfStock = p.stock <= 0;
-  const handle = () => { if(outOfStock) return; addToCart(p); setAdded(true); setTimeout(()=>setAdded(false),1500); };
-  return (
-    <div className="hcard" style={{background:CREAM,border:"1px solid "+BORDER,overflow:"hidden",borderRadius:8,opacity:outOfStock?.6:1}}>
-      <div style={{height:mobile?130:175,background:`linear-gradient(145deg,${p.color||BROWN},${DARK})`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-        <div style={{fontSize:mobile?36:52,opacity:.8}}>{CATEGORIES.find(c=>c.key===p.category)?.emoji||"✨"}</div>
-        <div style={{position:"absolute",top:8,left:8,background:tagColors[p.tag]||"#666",color:"white",padding:"3px 8px",fontSize:9,fontWeight:"bold",borderRadius:4,letterSpacing:.5}}>{p.tag}</div>
-        {!mobile&&<div style={{position:"absolute",top:8,right:8,background:"rgba(26,10,0,.6)",color:G,padding:"3px 8px",fontSize:9,borderRadius:4}}>🌍 {p.country}</div>}
-        {outOfStock&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{background:RED,color:"white",padding:"6px 14px",fontSize:12,fontWeight:"bold",borderRadius:4}}>Épuisé</span></div>}
-        <button onClick={()=>toggleWish(p.id)} style={{position:"absolute",bottom:8,right:8,background:"rgba(0,0,0,.45)",border:"none",borderRadius:"50%",width:30,height:30,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>{wishlist.includes(p.id)?"❤️":"🤍"}</button>
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <label style={{fontSize:11,fontWeight:700,letterSpacing:"1.5px",color:T.terra,textTransform:"uppercase"}}>
+          Photos du produit ({photos.length}/{maxPhotos}) — min. 5 recommandées
+        </label>
+        {photos.length<maxPhotos&&(
+          <button onClick={()=>fileRef.current?.click()} style={{background:T.dark,color:"#fff",border:"none",padding:"8px 18px",fontSize:12,fontWeight:600,cursor:"pointer",borderRadius:8,fontFamily:"'DM Sans',sans-serif"}}>
+            + Ajouter des photos
+          </button>
+        )}
       </div>
-      <div style={{padding:mobile?"10px 12px":"14px 16px"}}>
-        <div style={{fontSize:9,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:3}}>{p.sub}</div>
-        <div style={{fontSize:mobile?13:15,fontWeight:"bold",color:DARK,marginBottom:3,lineHeight:1.3}}>{p.name}</div>
-        {!mobile&&<div style={{fontSize:11,color:MUTED,fontStyle:"italic",marginBottom:3}}>✂️ {p.artisan}, {p.city}</div>}
-        {!mobile&&<div style={{fontSize:11,color:"#666",marginBottom:8,lineHeight:1.5}}>{p.desc}</div>}
-        <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:mobile?6:8}}>{"★".repeat(Math.floor(p.rating)).split("").map((_,i)=><span key={i} style={{color:G,fontSize:11}}>★</span>)}<span style={{fontSize:10,color:MUTED}}>{p.rating}</span></div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:mobile?16:19,fontWeight:"bold",color:RED}}>{p.price} $</span>
-          <button onClick={handle} disabled={outOfStock} style={{background:added?GREEN:outOfStock?"#999":DARK,color:added?"white":G,border:"none",padding:mobile?"7px 12px":"8px 16px",fontFamily:"Georgia",fontSize:mobile?10:11,letterSpacing:1,borderRadius:4,cursor:outOfStock?"not-allowed":"pointer"}}>{added?"✓ Ajouté":outOfStock?"Épuisé":mobile?"+ Panier":"Ajouter au panier"}</button>
-        </div>
+      <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFiles} style={{display:"none"}}/>
+
+      {/* Photo grid */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:8}}>
+        {photos.map((photo,idx)=>(
+          <div key={photo.id} style={{position:"relative",borderRadius:12,overflow:"hidden",aspectRatio:"1",border:`2px solid ${idx===0?T.gold:T.border}`,background:T.cream}}>
+            <img src={photo.url} alt={photo.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+            {idx===0&&<div style={{position:"absolute",top:8,left:8,background:T.gold,color:T.dark,padding:"3px 10px",fontSize:9,fontWeight:700,borderRadius:100,letterSpacing:"1px"}}>PRINCIPALE</div>}
+            <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,.7))",padding:"20px 10px 8px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+              <span style={{color:"#fff",fontSize:9,opacity:.8}}>{photo.name?.slice(0,15)}{photo.name?.length>15?"...":""}</span>
+              <div style={{display:"flex",gap:4}}>
+                {idx>0&&<button onClick={()=>movePhoto(idx,-1)} style={{background:"rgba(255,255,255,.2)",border:"none",color:"#fff",width:22,height:22,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>}
+                {idx<photos.length-1&&<button onClick={()=>movePhoto(idx,1)} style={{background:"rgba(255,255,255,.2)",border:"none",color:"#fff",width:22,height:22,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>→</button>}
+                <button onClick={()=>removePhoto(photo.id)} style={{background:"rgba(220,38,38,.8)",border:"none",color:"#fff",width:22,height:22,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Empty slots */}
+        {Array.from({length:Math.max(0,5-photos.length)}).map((_,i)=>(
+          <div key={"slot-"+i} onClick={()=>fileRef.current?.click()} style={{aspectRatio:"1",border:`2px dashed ${T.border}`,borderRadius:12,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",background:T.cream,transition:"all .2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=T.gold;e.currentTarget.style.background=T.ivory;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background=T.cream;}}>
+            <div style={{fontSize:24,opacity:.3,marginBottom:4}}>📷</div>
+            <div style={{fontSize:10,color:T.muted,fontWeight:600}}>Photo {photos.length+i+1}</div>
+          </div>
+        ))}
       </div>
+      {photos.length<5&&<div style={{fontSize:11,color:T.orange,fontWeight:600,marginTop:8}}>⚠️ Ajoutez au moins 5 photos pour une fiche produit optimale</div>}
+      <div style={{fontSize:11,color:T.muted,marginTop:4}}>Formats : JPG, PNG, WebP · Max 5MB par image · Glissez pour réordonner</div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MAIN APP
-// ═══════════════════════════════════════════════════════════════
-export default function BADAOURPublic() {
-  const scr = useScreen();
-  const {mobile, tablet} = scr;
-  const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
-  const [orders, setOrders] = useState([]);
-  const [page, setPage] = useState("home");
-  const [activeCat, setActiveCat] = useState(null);
-  const [search, setSearch] = useState("");
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [notif, setNotif] = useState(null);
-  const [payStep, setPayStep] = useState("cart");
-  const [form, setForm] = useState({name:"",email:"",phone:"",address:"",city:"Montréal",province:"QC",postal:""});
-  const [trackId, setTrackId] = useState("");
-  const [trackResult, setTrackResult] = useState(null);
-  const [trackErr, setTrackErr] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
+// ─── MAIN ADMIN PANEL ────────────────────────────────────────────────────────
+export default function BADAOURAdmin(){
+  const [page,setPage]=useState("dashboard");
+  const [products,setProducts]=useState(initProducts);
+  const [orders,setOrders]=useState(initOrders);
+  const [editProduct,setEditP]=useState(null);
+  const [showNew,setShowNew]=useState(false);
+  const [newP,setNewP]=useState({name:"",category:"homme",sub:"",artisan:"",city:"",country:"Sénégal",price:"",stock:"",tag:"Nouveau",desc:"",emoji:"👘",photos:[]});
+  const [notif,setNotif]=useState(null);
+  const [filterCat,setFC]=useState(null);
+  const [searchQ,setSQ]=useState("");
+  const [sideCollapsed,setSC]=useState(false);
 
-  const toast = (msg,type="success") => {setNotif({msg,type});setTimeout(()=>setNotif(null),3000);};
-  const goPage = p => {setPage(p);setMenuOpen(false);window.scrollTo(0,0);};
+  // Artisan state
+  const initArtisans=[
+    {id:1,name:"Moussa Diallo",metier:"Tailleur brodeur",city:"Dakar",country:"Sénégal",emoji:"✂️",exp:"23 ans",bio:"Moussa perpétue l'art du grand boubou. Chaque broderie prend 4 jours.",email:"moussa@artisan.sn",phone:"+221 77 123 4567",photo:""},
+    {id:2,name:"Fatoumata Koné",metier:"Artisane bogolan",city:"Bamako",country:"Mali",emoji:"🎨",exp:"18 ans",bio:"Fatoumata ressuscite les motifs anciens du bogolan peint à la boue.",email:"fatoumata@artisan.ml",phone:"+223 66 789 0123",photo:""},
+    {id:3,name:"Abena Asante",metier:"Perlière Krobo",city:"Accra",country:"Ghana",emoji:"🔮",exp:"15 ans",bio:"Abena dirige une coopérative de 12 femmes artisanes.",email:"abena@artisan.gh",phone:"+233 20 456 7890",photo:""},
+    {id:4,name:"Cheikh Ndiaye",metier:"Sculpteur sur bois",city:"Thiès",country:"Sénégal",emoji:"🌳",exp:"30 ans",bio:"Maître sculpteur, Cheikh crée des pièces uniques en bois de venn.",email:"cheikh@artisan.sn",phone:"+221 76 234 5678",photo:""},
+    {id:5,name:"Kweku Mensah",metier:"Tisserand kente",city:"Kumasi",country:"Ghana",emoji:"🧵",exp:"25 ans",bio:"Tisserand royal, gardien de la tradition kente Ashanti.",email:"kweku@artisan.gh",phone:"+233 24 567 8901",photo:""},
+    {id:6,name:"Aïcha Diop",metier:"Couturière haute couture",city:"Dakar",country:"Sénégal",emoji:"👗",exp:"20 ans",bio:"Aïcha allie couture traditionnelle africaine et tendances contemporaines.",email:"aicha@artisan.sn",phone:"+221 78 345 6789",photo:""},
+  ];
+  const [artisans,setArtisans]=useState(initArtisans);
+  const [showNewArt,setShowNewArt]=useState(false);
+  const [editArt,setEditArt]=useState(null);
+  const [newArt,setNewArt]=useState({name:"",metier:"",city:"",country:"Sénégal",emoji:"✂️",exp:"",bio:"",email:"",phone:"",photo:""});
+  const [artSearch,setArtSearch]=useState("");
 
-  // ─── LOAD DATA FROM STORAGE ───
-  useEffect(()=>{
-    (async()=>{
-      const p = await loadData("products", DEFAULT_PRODUCTS);
-      const o = await loadData("orders", []);
-      setProducts(p);
-      setOrders(o);
-      // Initialize default products if first time
-      if(!p || p.length === 0) {
-        await saveData("products", DEFAULT_PRODUCTS);
-        setProducts(DEFAULT_PRODUCTS);
-      }
-      setLoading(false);
-    })();
-  },[]);
+  const toast=(msg)=>{setNotif(msg);setTimeout(()=>setNotif(null),3000);};
 
-  const addToCart = p => {setCart(c=>{const ex=c.find(i=>i.id===p.id);return ex?c.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...c,{...p,qty:1}];});toast(`${p.name} ajouté au panier`);};
-  const updateQty = (id,d) => setCart(c=>c.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i));
-  const removeItem = id => setCart(c=>c.filter(i=>i.id!==id));
-  const toggleWish = id => setWishlist(w=>w.includes(id)?w.filter(i=>i!==id):[...w,id]);
+  // Stats
+  const totalRev=products.reduce((s,p)=>s+p.price*p.sold,0);
+  const totalSold=products.reduce((s,p)=>s+p.sold,0);
+  const totalStock=products.reduce((s,p)=>s+p.stock,0);
+  const pendingOrders=orders.filter(o=>o.status!=="delivered").length;
 
-  const cartQty = cart.reduce((s,i)=>s+i.qty,0);
-  const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const shipping = cart.length?(subtotal>200?0:18):0;
-  const taxes = +((subtotal+shipping)*0.14975).toFixed(2);
-  const total = +(subtotal+shipping+taxes).toFixed(2);
-
-  const filtered = products.filter(p=>{
-    const mc = activeCat?p.category===activeCat:true;
-    const q = search.toLowerCase();
-    const mq = !q||p.name.toLowerCase().includes(q)||p.artisan.toLowerCase().includes(q)||p.country.toLowerCase().includes(q);
+  const filteredP=products.filter(p=>{
+    const mc=filterCat?p.category===filterCat:true;
+    const q=searchQ.toLowerCase();
+    const mq=!q||p.name.toLowerCase().includes(q)||p.artisan.toLowerCase().includes(q);
     return mc&&mq;
   });
 
-  const doTrack = () => {
-    if(!trackId.trim()){setTrackErr("Entrez un numéro de commande");return;}
-    const o = orders.find(o=>o.id===trackId.trim());
-    if(o){setTrackResult(o);setTrackErr("");}else{setTrackResult(null);setTrackErr("Commande introuvable. Vérifiez le numéro (ex: BDR-2025-XXXX)");}
+  const handleSaveNew=()=>{
+    if(!newP.name||!newP.price){toast("❌ Nom et prix obligatoires");return;}
+    const p={...newP,id:Date.now(),price:+newP.price,stock:+newP.stock||0,sold:0};
+    setProducts(prev=>[p,...prev]);
+    setShowNew(false);
+    setNewP({name:"",category:"homme",sub:"",artisan:"",city:"",country:"Sénégal",price:"",stock:"",tag:"Nouveau",desc:"",emoji:"👘",photos:[]});
+    toast("✅ Produit ajouté avec succès !");
   };
 
-  const confirmOrder = async () => {
-    if(!form.name||!form.email||!form.address){toast("Veuillez remplir les champs obligatoires","info");return;}
-    const oid = "BDR-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*9000)+1000);
-    const newOrder = {
-      id:oid,
-      date:new Date().toISOString().slice(0,10),
-      status:"confirmed",
-      customer:form.name,
-      email:form.email,
-      phone:form.phone,
-      address:form.address+", "+form.city+", "+form.province+" "+form.postal,
-      items:cart.map(i=>({pid:i.id,name:i.name,qty:i.qty,price:i.price})),
-      total,
-      shipping,
-      payMethod:"Carte",
-      events:[{step:"confirmed",date:new Date().toLocaleDateString("fr-CA",{day:"numeric",month:"short"})}]
-    };
-    const updatedOrders = [...orders, newOrder];
-    setOrders(updatedOrders);
-    await saveData("orders", updatedOrders);
-    // Decrease stock
-    const updatedProducts = products.map(p=>{const ci=cart.find(c=>c.id===p.id);return ci?{...p,stock:Math.max(0,p.stock-ci.qty)}:p;});
-    setProducts(updatedProducts);
-    await saveData("products", updatedProducts);
-    toast(`Commande ${oid} confirmée ! Merci !`);
-    setCart([]);setPayStep("cart");setForm({name:"",email:"",phone:"",address:"",city:"Montréal",province:"QC",postal:""});goPage("home");
+  const handleUpdateProduct=(updated)=>{
+    setProducts(prev=>prev.map(p=>p.id===updated.id?updated:p));
+    setEditP(null);
+    toast("✅ Produit mis à jour !");
   };
 
-  const navItems = [{k:"home",l:"Accueil"},{k:"boutique",l:"Boutique"},{k:"artisans",l:"Artisans"},{k:"suivi",l:"Suivi"},{k:"commande",l:"Sur mesure"}];
-  const gc = (d,t,m) => mobile?m:tablet?t:d;
-  const FInp = ({label,...props}) => (<div style={{marginBottom:16}}>{label&&<label style={{display:"block",fontSize:10,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:5,fontFamily:"Georgia",fontWeight:"bold"}}>{label}</label>}<input {...props} style={{width:"100%",padding:"12px 14px",background:"white",border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",borderRadius:6,...(props.style||{})}} /></div>);
+  const handleDeleteProduct=(id)=>{
+    setProducts(prev=>prev.filter(p=>p.id!==id));
+    setEditP(null);
+    toast("🗑️ Produit supprimé");
+  };
 
-  if(loading) return (
-    <div style={{fontFamily:"Georgia",background:DARK,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div style={{fontSize:36,fontWeight:"bold",color:G,letterSpacing:8}}>BADAOUR</div>
-      <div style={{fontSize:12,color:"#A0845C",letterSpacing:3}}>Chargement de la boutique...</div>
-      <div style={{width:40,height:40,border:`3px solid ${G}33`,borderTopColor:G,borderRadius:"50%",animation:"spin 1s linear infinite"}} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+  const handleStatusChange=(orderId,newStatus)=>{
+    setOrders(prev=>prev.map(o=>o.id===orderId?{...o,status:newStatus}:o));
+    toast("✅ Statut mis à jour");
+  };
+
+  // ─── ARTISAN HANDLERS ───
+  const handleSaveNewArt=()=>{
+    if(!newArt.name||!newArt.metier){toast("❌ Nom et métier obligatoires");return;}
+    const a={...newArt,id:Date.now()};
+    setArtisans(prev=>[a,...prev]);
+    setShowNewArt(false);
+    setNewArt({name:"",metier:"",city:"",country:"Sénégal",emoji:"✂️",exp:"",bio:"",email:"",phone:"",photo:""});
+    toast("✅ Artisan ajouté avec succès !");
+  };
+
+  const handleUpdateArt=(updated)=>{
+    setArtisans(prev=>prev.map(a=>a.id===updated.id?updated:a));
+    setEditArt(null);
+    toast("✅ Artisan mis à jour !");
+  };
+
+  const handleDeleteArt=(id)=>{
+    if(!confirm("Supprimer cet artisan ?"))return;
+    setArtisans(prev=>prev.filter(a=>a.id!==id));
+    setEditArt(null);
+    toast("🗑️ Artisan supprimé");
+  };
+
+  const filteredArt=artisans.filter(a=>{
+    const q=artSearch.toLowerCase();
+    return !q||a.name.toLowerCase().includes(q)||a.metier.toLowerCase().includes(q)||a.country.toLowerCase().includes(q);
+  });
+
+  const Sidebar=()=>(
+    <div style={{width:sideCollapsed?72:240,background:T.sidebar,height:"100vh",position:"fixed",left:0,top:0,zIndex:50,borderRight:`1px solid rgba(201,168,76,.1)`,transition:"width .3s cubic-bezier(.2,.8,.2,1)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
+      <div style={{padding:sideCollapsed?"20px 16px":"24px 20px",borderBottom:"1px solid rgba(255,255,255,.05)"}}>
+        <div style={{fontSize:sideCollapsed?14:20,fontWeight:800,color:T.gold,letterSpacing:"4px",fontFamily:"'Playfair Display',Georgia,serif",whiteSpace:"nowrap",overflow:"hidden"}}>{sideCollapsed?"B":"BADAOUR"}</div>
+        {!sideCollapsed&&<div style={{fontSize:9,color:"rgba(201,168,76,.4)",letterSpacing:"3px",marginTop:2,fontWeight:600}}>ADMINISTRATION</div>}
+      </div>
+      <nav style={{flex:1,padding:"16px 8px"}}>
+        {[
+          {k:"dashboard",l:"Dashboard",icon:"📊"},
+          {k:"products",l:"Produits",icon:"📦"},
+          {k:"orders",l:"Commandes",icon:"📋"},
+          {k:"artisans",l:"Artisans",icon:"✂️"},
+          {k:"analytics",l:"Analytique",icon:"📈"},
+          {k:"settings",l:"Paramètres",icon:"⚙️"},
+        ].map(({k,l,icon})=>(
+          <button key={k} onClick={()=>setPage(k)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:sideCollapsed?"12px 16px":"12px 16px",background:page===k?"rgba(201,168,76,.12)":"transparent",color:page===k?T.gold:"rgba(255,255,255,.4)",border:"none",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:page===k?700:500,fontFamily:"'DM Sans',sans-serif",marginBottom:4,textAlign:"left",transition:"all .2s",whiteSpace:"nowrap",overflow:"hidden"}}>
+            <span style={{fontSize:18,flexShrink:0}}>{icon}</span>
+            {!sideCollapsed&&l}
+          </button>
+        ))}
+      </nav>
+      <div style={{padding:"16px 8px",borderTop:"1px solid rgba(255,255,255,.05)"}}>
+        <button onClick={()=>setSC(!sideCollapsed)} style={{width:"100%",padding:"10px",background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:8,color:"rgba(255,255,255,.3)",cursor:"pointer",fontSize:16}}>{sideCollapsed?"→":"←"}</button>
+        {!sideCollapsed&&<a href="#" onClick={e=>{e.preventDefault();toast("Lien boutique: badaour.com");}} style={{display:"block",textAlign:"center",fontSize:11,color:T.gold,marginTop:12,textDecoration:"none",fontWeight:600}}>🌐 Voir la boutique →</a>}
+      </div>
     </div>
   );
 
-  return (
-    <div style={{fontFamily:"'Georgia','Times New Roman',serif",background:BG,minHeight:"100vh",color:DARK,overflowX:"hidden"}}>
-      <style>{`
-        @keyframes fadeSlide{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-        *{box-sizing:border-box;margin:0;padding:0;}
-        input:focus,textarea:focus,select:focus{border-color:${G}!important;outline:none;}
-        .hcard{transition:transform .25s ease,box-shadow .25s ease;} .hcard:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(26,10,0,.12);}
-        button{transition:opacity .15s,background .2s,transform .1s;cursor:pointer;} button:active:not(:disabled){transform:scale(.97);}
-        body{overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
-      `}</style>
+  const FInp=({label,textarea,...props})=>(
+    <div style={{marginBottom:16}}>
+      <label style={{display:"block",fontSize:11,fontWeight:700,letterSpacing:"1.5px",color:T.terra,textTransform:"uppercase",marginBottom:6}}>{label}</label>
+      {textarea?<textarea {...props} style={{width:"100%",padding:"11px 14px",background:T.cream,border:`1.5px solid ${T.border}`,color:T.dark,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",borderRadius:8,resize:"vertical",boxSizing:"border-box",...(props.style||{})}}/>
+      :<input {...props} style={{width:"100%",padding:"11px 14px",background:T.cream,border:`1.5px solid ${T.border}`,color:T.dark,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",borderRadius:8,boxSizing:"border-box",...(props.style||{})}}/>}
+    </div>
+  );
 
-      {/* NOTIFICATION */}
-      {notif&&<div style={{position:"fixed",top:14,left:mobile?14:"auto",right:14,zIndex:99999,background:notif.type==="info"?"#1A5276":GREEN,color:"white",padding:"14px 20px",borderRadius:8,fontSize:13,fontFamily:"Georgia",boxShadow:"0 8px 32px rgba(0,0,0,.3)",animation:"fadeSlide .3s ease",maxWidth:400}}>{notif.msg}</div>}
+  // ─── PRODUCT FORM (for new & edit) ───
+  const ProductForm=({data,setData,onSave,onCancel,title,onDelete})=>(
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)",overflow:"auto"}}>
+      <div style={{background:T.white,borderRadius:20,width:"90%",maxWidth:720,padding:"32px",boxShadow:"0 24px 64px rgba(0,0,0,.2)",maxHeight:"90vh",overflow:"auto",margin:"20px 0"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}>
+          <h2 style={{fontSize:24,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",margin:0}}>{title}</h2>
+          <button onClick={onCancel} style={{background:T.sand,border:"none",width:36,height:36,borderRadius:10,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        </div>
 
-      {/* ═══ HEADER ═══ */}
-      <header style={{background:DARK,borderBottom:`3px solid ${G}`,position:"sticky",top:0,zIndex:100}}>
-        {!mobile&&<div style={{maxWidth:1200,margin:"0 auto",padding:"0 24px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #3A1F00",padding:"5px 0",fontSize:10,color:G,letterSpacing:1}}>
-          <span>🌍 Livraison Afrique → Canada · 14–21 jours</span>
-          {!tablet&&<span>Commerce éthique · Artisanat authentique · Impact direct</span>}
-          <span>📞 {PHONE}</span>
-        </div></div>}
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+(mobile?"14px":"24px")}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:mobile?"10px 0":"14px 0",gap:10}}>
-            <div onClick={()=>goPage("home")} style={{cursor:"pointer",flexShrink:0}}>
-              <div style={{fontSize:mobile?22:28,fontWeight:"bold",color:G,letterSpacing:mobile?4:7}}>BADAOUR</div>
-              {!mobile&&<div style={{fontSize:8,color:"#A0845C",letterSpacing:3,marginTop:-2}}>L'AFRIQUE À VOTRE PORTE</div>}
-            </div>
-            {!mobile&&<div style={{flex:1,maxWidth:320,margin:"0 16px",position:"relative"}}>
-              <input value={search} onChange={e=>{setSearch(e.target.value);if(e.target.value){goPage("boutique");setActiveCat(null);}}} placeholder="Rechercher un produit, artisan..." style={{width:"100%",padding:"10px 14px 10px 34px",background:"#2A1000",border:`1px solid ${G}33`,borderRadius:6,color:CREAM,fontSize:13,fontFamily:"Georgia"}} />
-              <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:13,opacity:.6}}>🔍</span>
-            </div>}
-            {!mobile&&!tablet&&<nav style={{display:"flex",gap:6,alignItems:"center"}}>{navItems.map(({k,l})=>(<button key={k} onClick={()=>goPage(k)} style={{background:"none",border:"none",color:page===k?G:"#A0845C",fontSize:12,letterSpacing:1,fontFamily:"Georgia",borderBottom:page===k?`2px solid ${G}`:"2px solid transparent",padding:"6px 8px"}}>{l}</button>))}</nav>}
-            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-              <button onClick={()=>{setPayStep("cart");goPage("panier");}} style={{background:G,border:"none",borderRadius:6,padding:mobile?"8px 12px":"8px 16px",color:DARK,fontFamily:"Georgia",fontSize:13,fontWeight:"bold",position:"relative"}}>🛒{!mobile&&" Panier"}{cartQty>0&&<span style={{position:"absolute",top:-7,right:-7,background:"#C0392B",color:"white",borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:"bold"}}>{cartQty}</span>}</button>
-              {(mobile||tablet)&&<button onClick={()=>setMenuOpen(!menuOpen)} style={{background:"none",border:"1px solid #3A1F00",borderRadius:6,padding:"7px 10px",color:G,fontSize:18}}>{menuOpen?"✕":"☰"}</button>}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <FInp label="Nom du produit *" placeholder="Grand Boubou Brodé" value={data.name} onChange={e=>setData({...data,name:e.target.value})}/>
+          <div style={{marginBottom:16}}>
+            <label style={{display:"block",fontSize:11,fontWeight:700,letterSpacing:"1.5px",color:T.terra,textTransform:"uppercase",marginBottom:6}}>Catégorie *</label>
+            <select value={data.category} onChange={e=>setData({...data,category:e.target.value})} style={{width:"100%",padding:"11px 14px",background:T.cream,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:"'DM Sans',sans-serif",borderRadius:8,outline:"none"}}>
+              {CATS.map(c=><option key={c.key} value={c.key}>{c.emoji} {c.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14}}>
+          <FInp label="Sous-catégorie" placeholder="Boubou, Robe..." value={data.sub} onChange={e=>setData({...data,sub:e.target.value})}/>
+          <FInp label="Prix ($CA) *" type="number" placeholder="189" value={data.price} onChange={e=>setData({...data,price:e.target.value})}/>
+          <FInp label="Stock" type="number" placeholder="12" value={data.stock} onChange={e=>setData({...data,stock:e.target.value})}/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14}}>
+          <FInp label="Artisan" placeholder="Moussa Diallo" value={data.artisan} onChange={e=>setData({...data,artisan:e.target.value})}/>
+          <FInp label="Ville" placeholder="Dakar" value={data.city} onChange={e=>setData({...data,city:e.target.value})}/>
+          <FInp label="Pays" placeholder="Sénégal" value={data.country} onChange={e=>setData({...data,country:e.target.value})}/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <div style={{marginBottom:16}}>
+            <label style={{display:"block",fontSize:11,fontWeight:700,letterSpacing:"1.5px",color:T.terra,textTransform:"uppercase",marginBottom:6}}>Tag</label>
+            <select value={data.tag} onChange={e=>setData({...data,tag:e.target.value})} style={{width:"100%",padding:"11px 14px",background:T.cream,border:`1.5px solid ${T.border}`,fontSize:14,fontFamily:"'DM Sans',sans-serif",borderRadius:8,outline:"none"}}>
+              {["Best","Nouveau","Artisanal","Populaire","Unique","Bio","Premium"].map(t=><option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <FInp label="Emoji" placeholder="👘" value={data.emoji} onChange={e=>setData({...data,emoji:e.target.value})}/>
+        </div>
+
+        <FInp label="Description" textarea placeholder="Description détaillée du produit..." rows={3} value={data.desc} onChange={e=>setData({...data,desc:e.target.value})}/>
+
+        {/* PHOTO UPLOADER */}
+        <div style={{background:T.cream,borderRadius:14,padding:20,marginBottom:20,border:`1px solid ${T.border}`}}>
+          <PhotoUploader photos={data.photos||[]} onChange={(updater)=>{
+            if(typeof updater==="function"){setData(d=>({...d,photos:updater(d.photos||[])}));}
+            else{setData({...data,photos:updater});}
+          }}/>
+        </div>
+
+        <div style={{display:"flex",gap:10,justifyContent:"space-between"}}>
+          <div style={{display:"flex",gap:10}}>
+            {onDelete&&<button onClick={()=>{if(confirm("Supprimer ce produit ?"))onDelete();}} style={{background:T.red,color:"#fff",border:"none",padding:"12px 24px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif"}}>🗑️ Supprimer</button>}
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={onCancel} style={{background:"transparent",color:T.dark,border:`1.5px solid ${T.border}`,padding:"12px 24px",fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif"}}>Annuler</button>
+            <button onClick={onSave} style={{background:T.dark,color:"#fff",border:"none",padding:"12px 32px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:".5px"}}>💾 Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ─── ARTISAN FORM MODAL ───
+  const ArtisanForm=({data,setData,onSave,onCancel,title,onDelete})=>{
+    const photoRef=useRef(null);
+    const handlePhoto=(e)=>{
+      const file=e.target.files?.[0];
+      if(!file)return;
+      if(!file.type.startsWith("image/")){alert("Fichier image requis");return;}
+      if(file.size>5*1024*1024){alert("Max 5MB");return;}
+      const reader=new FileReader();
+      reader.onload=(ev)=>setData({...data,photo:ev.target.result});
+      reader.readAsDataURL(file);
+      e.target.value="";
+    };
+    return(
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:60,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)",overflow:"auto"}}>
+      <div style={{background:T.white,borderRadius:20,width:"90%",maxWidth:580,padding:"32px",boxShadow:"0 24px 64px rgba(0,0,0,.2)",maxHeight:"85vh",overflow:"auto",margin:"20px 0"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}>
+          <h2 style={{fontSize:24,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",margin:0}}>{title}</h2>
+          <button onClick={onCancel} style={{background:T.sand,border:"none",width:36,height:36,borderRadius:10,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        </div>
+
+        {/* PHOTO DE PROFIL */}
+        <div style={{display:"flex",alignItems:"center",gap:20,marginBottom:24,padding:20,background:T.cream,borderRadius:14,border:`1.5px dashed ${T.border}`}}>
+          <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+          <div onClick={()=>photoRef.current?.click()} style={{width:90,height:90,borderRadius:"50%",background:data.photo?"transparent":T.dark,border:data.photo?`3px solid ${T.gold}`:`3px dashed ${T.gold}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",overflow:"hidden",flexShrink:0,transition:"all .2s",position:"relative"}}
+            onMouseEnter={e=>{if(data.photo){e.currentTarget.querySelector('.photo-overlay').style.opacity='1';}}}
+            onMouseLeave={e=>{if(data.photo){e.currentTarget.querySelector('.photo-overlay').style.opacity='0';}}}>
+            {data.photo
+              ?<><img src={data.photo} alt="profil" style={{width:"100%",height:"100%",objectFit:"cover"}}/><div className="photo-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .2s",borderRadius:"50%"}}><span style={{color:"#fff",fontSize:11,fontWeight:700}}>Changer</span></div></>
+              :<div style={{textAlign:"center"}}><div style={{fontSize:28,marginBottom:2}}>{data.emoji||"📷"}</div><div style={{fontSize:8,color:T.gold,fontWeight:700,letterSpacing:".5px"}}>AJOUTER</div></div>
+            }
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:T.dark,marginBottom:4}}>Photo de profil / Logo</div>
+            <div style={{fontSize:11,color:T.muted,lineHeight:1.6,marginBottom:10}}>Ajoutez une photo de l'artisan ou un logo. Formats : JPG, PNG, WebP. Max 5MB.</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>photoRef.current?.click()} style={{background:T.dark,color:"#fff",border:"none",padding:"7px 16px",fontSize:11,fontWeight:600,cursor:"pointer",borderRadius:8,fontFamily:"'DM Sans',sans-serif"}}>{data.photo?"📷 Changer":"📷 Importer"}</button>
+              {data.photo&&<button onClick={()=>setData({...data,photo:""})} style={{background:"transparent",border:`1px solid ${T.red}`,color:T.red,padding:"7px 14px",fontSize:11,fontWeight:600,cursor:"pointer",borderRadius:8,fontFamily:"'DM Sans',sans-serif"}}>✕ Retirer</button>}
             </div>
           </div>
         </div>
-        {(mobile||tablet)&&menuOpen&&<div style={{background:"#1A0800",borderTop:`1px solid ${G}33`,padding:"10px "+(mobile?"14px":"24px")}}>{navItems.map(({k,l})=>(<button key={k} onClick={()=>goPage(k)} style={{display:"block",width:"100%",textAlign:"left",background:page===k?"#2A1000":"transparent",border:"none",color:page===k?G:"#A0845C",fontSize:15,fontFamily:"Georgia",padding:"12px 16px",borderLeft:page===k?`3px solid ${G}`:"3px solid transparent",marginBottom:3,borderRadius:4}}>{l}</button>))}</div>}
-      </header>
 
-      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 70px",gap:14,alignItems:"flex-end"}}>
+          <FInp label="Nom complet *" placeholder="Moussa Diallo" value={data.name} onChange={e=>setData({...data,name:e.target.value})}/>
+          <div style={{marginBottom:16}}>
+            <label style={{display:"block",fontSize:11,fontWeight:700,letterSpacing:"1.5px",color:T.terra,textTransform:"uppercase",marginBottom:6}}>Emoji</label>
+            <input value={data.emoji} onChange={e=>setData({...data,emoji:e.target.value})} style={{width:"100%",padding:"11px 14px",background:T.cream,border:`1.5px solid ${T.border}`,fontSize:20,borderRadius:8,outline:"none",textAlign:"center",boxSizing:"border-box"}}/>
+          </div>
+        </div>
 
-        {/* ═══ HOME ═══ */}
-        {page==="home"&&(<>
-          <div style={{background:`linear-gradient(135deg,${DARK},${BROWN},${DARK})`,padding:mobile?"44px 16px":tablet?"56px 24px":"80px 24px",borderBottom:`4px solid ${G}`,position:"relative",overflow:"hidden"}}>
-            <div style={{position:"absolute",top:0,right:0,width:300,height:300,background:`radial-gradient(circle,${G}08,transparent)`,borderRadius:"50%"}} />
-            <div style={{maxWidth:580,position:"relative",animation:"fadeUp .6s ease"}}>
-              <div style={{fontSize:10,letterSpacing:5,color:G,marginBottom:16,borderLeft:`3px solid ${G}`,paddingLeft:14}}>ARTISANAT AFRICAIN AUTHENTIQUE · MONTRÉAL</div>
-              <h1 style={{fontSize:mobile?30:tablet?42:54,fontWeight:"bold",color:CREAM,lineHeight:1.1,marginBottom:18}}>L'âme de l'Afrique,<br/><span style={{color:G}}>livrée chez vous.</span></h1>
-              <p style={{fontSize:mobile?14:16,color:"#C4945C",lineHeight:1.9,maxWidth:460,marginBottom:28}}>Habillement traditionnel, oeuvres d'art et produits africains. Du tailleur directement à votre porte.</p>
-              <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-                <button onClick={()=>goPage("boutique")} style={{background:G,color:DARK,border:"none",padding:"14px 30px",fontSize:13,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,textTransform:"uppercase",borderRadius:6}}>Découvrir la boutique</button>
-                <button onClick={()=>goPage("suivi")} style={{background:"transparent",color:G,border:`2px solid ${G}`,padding:"14px 24px",fontSize:13,fontFamily:"Georgia",letterSpacing:2,textTransform:"uppercase",borderRadius:6}}>Suivre ma commande</button>
+        <FInp label="Métier / Spécialité *" placeholder="Tailleur brodeur, Sculpteur..." value={data.metier} onChange={e=>setData({...data,metier:e.target.value})}/>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14}}>
+          <FInp label="Ville" placeholder="Dakar" value={data.city} onChange={e=>setData({...data,city:e.target.value})}/>
+          <FInp label="Pays" placeholder="Sénégal" value={data.country} onChange={e=>setData({...data,country:e.target.value})}/>
+          <FInp label="Expérience" placeholder="15 ans" value={data.exp} onChange={e=>setData({...data,exp:e.target.value})}/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <FInp label="Email" type="email" placeholder="artisan@email.com" value={data.email} onChange={e=>setData({...data,email:e.target.value})}/>
+          <FInp label="Téléphone" type="tel" placeholder="+221 77 123 4567" value={data.phone} onChange={e=>setData({...data,phone:e.target.value})}/>
+        </div>
+
+        <FInp label="Biographie" textarea placeholder="Parcours, savoir-faire, histoire de l'artisan..." rows={4} value={data.bio} onChange={e=>setData({...data,bio:e.target.value})}/>
+
+        <div style={{display:"flex",gap:10,justifyContent:"space-between",marginTop:8}}>
+          <div>{onDelete&&<button onClick={()=>onDelete(data.id)} style={{background:T.red,color:"#fff",border:"none",padding:"12px 24px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif"}}>🗑️ Supprimer l'artisan</button>}</div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={onCancel} style={{background:"transparent",color:T.dark,border:`1.5px solid ${T.border}`,padding:"12px 24px",fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif"}}>Annuler</button>
+            <button onClick={onSave} style={{background:T.dark,color:"#fff",border:"none",padding:"12px 32px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:".5px"}}>💾 Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    );
+  };
+
+  return(
+    <div style={{fontFamily:"'DM Sans',sans-serif",background:T.bg,minHeight:"100vh",color:T.dark}}>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0;}
+        ::selection{background:${T.gold};color:${T.dark}}
+        input:focus,textarea:focus,select:focus{border-color:${T.gold}!important;box-shadow:0 0 0 3px rgba(201,168,76,.12)!important;}
+        button{transition:all .2s;}
+        button:hover:not(:disabled){opacity:.9;}
+        ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:${T.border};border-radius:3px;}
+      `}</style>
+
+      {notif&&<div style={{position:"fixed",top:20,right:20,zIndex:9999,background:T.dark,color:T.gold,padding:"14px 24px",borderRadius:12,fontSize:13,fontWeight:600,boxShadow:"0 8px 32px rgba(0,0,0,.3)",animation:"slideIn .3s ease",maxWidth:340}}>
+        <style>{`@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}`}</style>
+        {notif}
+      </div>}
+
+      <Sidebar/>
+
+      {/* Product Forms */}
+      {showNew&&<ProductForm data={newP} setData={setNewP} title="✨ Nouveau produit" onSave={handleSaveNew} onCancel={()=>setShowNew(false)}/>}
+      {editProduct&&<ProductForm data={editProduct} setData={setEditP} title="✏️ Modifier le produit" onSave={()=>handleUpdateProduct(editProduct)} onCancel={()=>setEditP(null)} onDelete={()=>handleDeleteProduct(editProduct.id)}/>}
+
+      {/* Artisan Modals */}
+      {showNewArt&&<ArtisanForm data={newArt} setData={setNewArt} title="✨ Nouvel artisan" onSave={handleSaveNewArt} onCancel={()=>setShowNewArt(false)}/>}
+      {editArt&&<ArtisanForm data={editArt} setData={setEditArt} title="✏️ Modifier l'artisan" onSave={()=>handleUpdateArt(editArt)} onCancel={()=>setEditArt(null)} onDelete={handleDeleteArt}/>}
+
+      {/* MAIN CONTENT */}
+      <div style={{marginLeft:sideCollapsed?72:240,transition:"margin-left .3s cubic-bezier(.2,.8,.2,1)",minHeight:"100vh"}}>
+
+        {/* Top bar */}
+        <div style={{background:T.white,borderBottom:`1px solid ${T.border}`,padding:"16px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:40}}>
+          <div>
+            <h1 style={{fontSize:20,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",margin:0}}>{
+              {dashboard:"Dashboard",products:"Gestion des Produits",orders:"Gestion des Commandes",artisans:"Nos Artisans",analytics:"Analytique",settings:"Paramètres"}[page]
+            }</h1>
+            <div style={{fontSize:12,color:T.muted,marginTop:2}}>{new Date().toLocaleDateString("fr-CA",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div>
+          </div>
+          <div style={{display:"flex",gap:12,alignItems:"center"}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:T.dark,display:"flex",alignItems:"center",justifyContent:"center",color:T.gold,fontSize:14,fontWeight:700}}>A</div>
+            <div><div style={{fontSize:13,fontWeight:700}}>Admin</div><div style={{fontSize:11,color:T.muted}}>admin@badaour.com</div></div>
+          </div>
+        </div>
+
+        <div style={{padding:"28px 32px"}}>
+
+        {/* ════════ DASHBOARD ════════ */}
+        {page==="dashboard"&&(<>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:28}}>
+            {[
+              {icon:"💰",label:"Chiffre d'affaires",val:`${(totalRev/1000).toFixed(1)}K $CA`,sub:"Total des ventes",color:T.green,bg:"#F0FFF4"},
+              {icon:"📦",label:"Articles vendus",val:totalSold,sub:`Sur ${products.length} produits`,color:T.blue,bg:"#EFF6FF"},
+              {icon:"🏪",label:"Stock total",val:totalStock,sub:"Unités en inventaire",color:T.orange,bg:"#FFF7ED"},
+              {icon:"📋",label:"Commandes actives",val:pendingOrders,sub:`${orders.length} total`,color:"#6A0572",bg:"#FAF5FF"},
+            ].map(({icon,label,val,sub,color,bg})=>(
+              <div key={label} style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`,position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:-10,right:-10,width:80,height:80,borderRadius:"50%",background:bg,opacity:.6}}/>
+                <div style={{position:"relative"}}>
+                  <div style={{fontSize:28,marginBottom:8}}>{icon}</div>
+                  <div style={{fontSize:11,fontWeight:700,letterSpacing:"1.5px",color:T.muted,textTransform:"uppercase",marginBottom:6}}>{label}</div>
+                  <div style={{fontSize:28,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif"}}>{val}</div>
+                  <div style={{fontSize:12,color:T.muted,marginTop:4}}>{sub}</div>
+                </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:mobile?18:48,marginTop:mobile?32:52,borderTop:"1px solid #3A1F00",paddingTop:24}}>
-                {[["50+","Artisans"],["10+","Pays"],["100%","Éthique"],["4.9★","Satisfaction"]].map(([v,l])=>(<div key={l}><div style={{fontSize:mobile?22:26,color:G,fontWeight:"bold"}}>{v}</div><div style={{fontSize:10,color:"#A0845C",letterSpacing:1}}>{l}</div></div>))}
+            ))}
+          </div>
+
+          {/* Quick actions */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:28}}>
+            <div style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`}}>
+              <h3 style={{fontSize:16,fontWeight:700,color:T.dark,marginBottom:16,fontFamily:"'Playfair Display',Georgia,serif"}}>⚡ Actions rapides</h3>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <button onClick={()=>{setPage("products");setShowNew(true);}} style={{background:T.dark,color:"#fff",border:"none",padding:"14px",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:13}}>+ Nouveau produit</button>
+                <button onClick={()=>setPage("orders")} style={{background:T.terra,color:"#fff",border:"none",padding:"14px",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:13}}>📋 Commandes</button>
+                <button onClick={()=>setPage("products")} style={{background:"transparent",color:T.dark,border:`1.5px solid ${T.border}`,padding:"14px",borderRadius:10,cursor:"pointer",fontWeight:600,fontSize:13}}>📦 Inventaire</button>
+                <button onClick={()=>setPage("analytics")} style={{background:"transparent",color:T.dark,border:`1.5px solid ${T.border}`,padding:"14px",borderRadius:10,cursor:"pointer",fontWeight:600,fontSize:13}}>📈 Stats</button>
               </div>
             </div>
-          </div>
-
-          {/* Categories */}
-          <div style={{padding:mobile?"28px 14px":"52px 24px"}}>
-            <div style={{textAlign:"center",marginBottom:mobile?18:36}}><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:8}}>EXPLORER PAR UNIVERS</div><h2 style={{fontSize:mobile?24:34,color:DARK}}>Nos 5 univers</h2></div>
-            <div style={{display:"grid",gridTemplateColumns:gc("repeat(5,1fr)","repeat(3,1fr)","repeat(2,1fr)"),gap:mobile?10:18}}>
-              {CATEGORIES.map(cat=>(<div key={cat.key} className="hcard" onClick={()=>{setActiveCat(cat.key);goPage("boutique");setSearch("");}} style={{background:CREAM,border:"1px solid "+BORDER,borderTop:`5px solid ${cat.color}`,padding:mobile?"16px 12px":"24px 20px",cursor:"pointer",textAlign:"center",borderRadius:6}}><div style={{fontSize:mobile?28:36,marginBottom:8}}>{cat.emoji}</div><div style={{fontSize:mobile?13:15,fontWeight:"bold",color:DARK,marginBottom:4}}>{mobile?cat.label:cat.full}</div>{!mobile&&<div style={{fontSize:11,color:MUTED,lineHeight:1.5}}>{cat.desc}</div>}</div>))}
+            <div style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`}}>
+              <h3 style={{fontSize:16,fontWeight:700,color:T.dark,marginBottom:16,fontFamily:"'Playfair Display',Georgia,serif"}}>📋 Commandes récentes</h3>
+              {orders.slice(0,3).map(o=>(
+                <div key={o.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${T.border}`}}>
+                  <div><div style={{fontSize:13,fontWeight:700}}>{o.id}</div><div style={{fontSize:11,color:T.muted}}>{o.client}</div></div>
+                  <span style={{background:STATUS_MAP[o.status]?.c||"#666",color:"#fff",padding:"3px 10px",fontSize:10,fontWeight:700,borderRadius:100}}>{STATUS_MAP[o.status]?.l}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Featured */}
-          <div style={{padding:mobile?"20px 14px 40px":"36px 24px 60px",background:BGALT}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:mobile?16:28,flexWrap:"wrap",gap:10}}><div><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:6}}>COUP DE CŒUR</div><h2 style={{fontSize:mobile?24:32,color:DARK}}>Sélection du moment</h2></div><button onClick={()=>{goPage("boutique");setActiveCat(null);setSearch("");}} style={{background:"none",border:`2px solid ${RED}`,color:RED,padding:"8px 16px",fontFamily:"Georgia",fontSize:12,borderRadius:6}}>Voir tout →</button></div>
-            <div style={{display:"grid",gridTemplateColumns:gc("repeat(4,1fr)","repeat(2,1fr)","repeat(2,1fr)"),gap:mobile?10:18}}>
-              {[products[0],products[3],products[9],products[12]].filter(Boolean).map(p=>(<ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} mobile={mobile} />))}
-            </div>
-          </div>
-
-          {/* Story */}
-          <div style={{background:DARK,padding:mobile?"40px 16px":"68px 24px",borderTop:`3px solid ${G}`}}>
-            <div style={{maxWidth:640,margin:"0 auto",textAlign:"center"}}>
-              <div style={{fontSize:10,letterSpacing:5,color:G,marginBottom:14}}>NOTRE MISSION</div>
-              <h2 style={{fontSize:mobile?24:38,color:CREAM,lineHeight:1.3,marginBottom:20}}>Né en Afrique, bâti à <span style={{color:G}}>Montréal.</span></h2>
-              <p style={{fontSize:mobile?13:15,color:"#C4945C",lineHeight:1.9,marginBottom:28}}>BADAOUR relie la diaspora africaine à ses racines. Chaque produit est fabriqué à la main par un artisan que nous connaissons personnellement. Zéro intermédiaire, impact direct.</p>
-              <div style={{display:"flex",gap:mobile?16:40,justifyContent:"center",flexWrap:"wrap"}}>{[["Commerce éthique","Rémunération juste"],["Impact direct","Soutien aux familles"],["Authenticité","100% artisanal"]].map(([t,s])=>(<div key={t} style={{minWidth:100}}><div style={{width:36,height:2,background:G,margin:"0 auto 10px"}} /><div style={{color:CREAM,fontWeight:"bold",fontSize:13}}>{t}</div><div style={{color:"#A0845C",fontSize:11}}>{s}</div></div>))}</div>
+          {/* Top products */}
+          <div style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`}}>
+            <h3 style={{fontSize:16,fontWeight:700,color:T.dark,marginBottom:16,fontFamily:"'Playfair Display',Georgia,serif"}}>🏆 Top produits par ventes</h3>
+            <div style={{display:"grid",gap:8}}>
+              {[...products].sort((a,b)=>b.sold-a.sold).slice(0,5).map((p,i)=>(
+                <div key={p.id} style={{display:"flex",alignItems:"center",gap:14,padding:"10px 12px",borderRadius:10,background:i===0?T.ivory:"transparent"}}>
+                  <span style={{fontSize:22}}>{p.emoji}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:700}}>{p.name}</div>
+                    <div style={{fontSize:11,color:T.muted}}>{p.artisan} · {p.country}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:14,fontWeight:700,color:T.dark}}>{p.sold} vendus</div>
+                    <div style={{fontSize:12,color:T.muted}}>{p.price} $CA</div>
+                  </div>
+                  <div style={{width:60,height:6,background:T.sand,borderRadius:3,overflow:"hidden"}}>
+                    <div style={{width:`${(p.sold/products[0]?.sold||1)*100}%`,height:"100%",background:T.gold,borderRadius:3}}/>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </>)}
 
-        {/* ═══ BOUTIQUE ═══ */}
-        {page==="boutique"&&(<div style={{padding:mobile?"24px 14px":"44px 24px"}}>
-          <div style={{marginBottom:20}}><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:5}}>BADAOUR</div><h1 style={{fontSize:mobile?26:36,color:DARK,marginBottom:14}}>Notre Boutique</h1>
-            {mobile&&<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Rechercher..." style={{width:"100%",padding:"10px 14px",background:"white",border:`2px solid ${BORDER}`,borderRadius:6,fontSize:14,fontFamily:"Georgia",marginBottom:12}} />}
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              <button onClick={()=>setActiveCat(null)} style={{background:!activeCat?DARK:"transparent",color:!activeCat?G:DARK,border:`2px solid ${DARK}`,padding:"6px 14px",fontFamily:"Georgia",fontSize:12,borderRadius:6}}>Tout ({products.length})</button>
-              {CATEGORIES.map(cat=>{const count=products.filter(p=>p.category===cat.key).length;return(<button key={cat.key} onClick={()=>setActiveCat(activeCat===cat.key?null:cat.key)} style={{background:activeCat===cat.key?DARK:"transparent",color:activeCat===cat.key?G:DARK,border:`2px solid ${DARK}`,padding:"6px 14px",fontFamily:"Georgia",fontSize:12,borderRadius:6}}>{cat.emoji} {cat.label} ({count})</button>);})}
+        {/* ════════ PRODUCTS ════════ */}
+        {page==="products"&&(<>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <input value={searchQ} onChange={e=>setSQ(e.target.value)} placeholder="🔍 Rechercher un produit..." style={{padding:"10px 16px",border:`1.5px solid ${T.border}`,borderRadius:10,fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",width:220,background:T.white}}/>
+              <div style={{display:"flex",gap:4}}>
+                <button onClick={()=>setFC(null)} style={{padding:"8px 14px",borderRadius:8,border:`1.5px solid ${!filterCat?T.dark:T.border}`,background:!filterCat?T.dark:"transparent",color:!filterCat?"#fff":T.dark,fontSize:12,fontWeight:600,cursor:"pointer"}}>Tout ({products.length})</button>
+                {CATS.map(c=>{const count=products.filter(p=>p.category===c.key).length;return(
+                  <button key={c.key} onClick={()=>setFC(filterCat===c.key?null:c.key)} style={{padding:"8px 14px",borderRadius:8,border:`1.5px solid ${filterCat===c.key?T.dark:T.border}`,background:filterCat===c.key?T.dark:"transparent",color:filterCat===c.key?"#fff":T.dark,fontSize:12,fontWeight:600,cursor:"pointer"}}>{c.emoji} {count}</button>
+                );})}
+              </div>
             </div>
+            <button onClick={()=>setShowNew(true)} style={{background:T.dark,color:"#fff",border:"none",padding:"12px 24px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,letterSpacing:".5px"}}>+ Nouveau produit</button>
           </div>
-          {filtered.length===0?<div style={{textAlign:"center",padding:80,color:MUTED}}><div style={{fontSize:48}}>🔍</div><div style={{marginTop:12,fontSize:16}}>Aucun produit trouvé</div></div>
-          :<div style={{display:"grid",gridTemplateColumns:gc("repeat(4,1fr)","repeat(3,1fr)","repeat(2,1fr)"),gap:mobile?10:18}}>{filtered.map(p=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} mobile={mobile} />)}</div>}
-        </div>)}
 
-        {/* ═══ ARTISANS ═══ */}
-        {page==="artisans"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",animation:"fadeUp .4s ease"}}>
-          <div style={{marginBottom:mobile?18:34}}><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:5}}>LES MAINS QUI CRÉENT</div><h1 style={{fontSize:mobile?26:36,color:DARK}}>Nos Artisans</h1><p style={{color:MUTED,marginTop:6,fontSize:14}}>Chaque produit est fabriqué par un artisan que nous connaissons personnellement.</p></div>
-          <div style={{display:"grid",gridTemplateColumns:gc("repeat(3,1fr)","repeat(2,1fr)","1fr"),gap:mobile?12:20}}>
-            {ARTISANS.map(a=>(<div key={a.name} className="hcard" style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"18px 16px":"28px 24px",borderRadius:8}}>
-              <div style={{width:56,height:56,borderRadius:"50%",background:`linear-gradient(135deg,${BROWN},${DARK})`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}><span style={{fontSize:24}}>✂️</span></div>
-              <div style={{fontSize:17,fontWeight:"bold",color:DARK,marginBottom:2}}>{a.name}</div>
-              <div style={{fontSize:12,color:RED,fontWeight:"bold",marginBottom:4}}>{a.craft}</div>
-              <div style={{fontSize:11,color:MUTED,marginBottom:8}}>📍 {a.city}, {a.country} · {a.exp} ans d'expérience</div>
-              <div style={{fontSize:12,color:"#555",lineHeight:1.7,fontStyle:"italic"}}>"{a.bio}"</div>
-            </div>))}
-          </div>
-        </div>)}
-
-        {/* ═══ SUIVI ═══ */}
-        {page==="suivi"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",maxWidth:700,margin:"0 auto",animation:"fadeUp .4s ease"}}>
-          <div style={{marginBottom:20}}><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:5}}>SUIVI</div><h1 style={{fontSize:mobile?26:36,color:DARK,marginBottom:6}}>Suivre ma commande</h1><p style={{color:MUTED,fontSize:14}}>Entrez votre numéro de commande pour voir son statut.</p></div>
-          <div style={{display:"flex",gap:10,marginBottom:20}}>
-            <input value={trackId} onChange={e=>setTrackId(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doTrack()} placeholder="BDR-2025-XXXX" style={{flex:1,padding:"14px 16px",background:"white",border:`2px solid ${BORDER}`,fontSize:15,fontFamily:"Georgia",borderRadius:6}} />
-            <button onClick={doTrack} style={{background:DARK,color:G,border:"none",padding:"14px 24px",fontFamily:"Georgia",fontSize:13,fontWeight:"bold",letterSpacing:1,borderRadius:6}}>Rechercher</button>
-          </div>
-          {trackErr&&<div style={{background:"#FFF3F3",border:"1px solid #E74C3C",padding:"14px 18px",borderRadius:8,color:"#C0392B",fontSize:13,marginBottom:16}}>⚠️ {trackErr}</div>}
-          {trackResult&&(<div style={{background:CREAM,border:`2px solid ${G}`,borderRadius:10,padding:mobile?"18px":"28px",animation:"fadeUp .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:8}}>
-              <div><div style={{fontSize:18,fontWeight:"bold",color:DARK}}>{trackResult.id}</div><div style={{fontSize:12,color:MUTED}}>{trackResult.customer} · {trackResult.date}</div></div>
-              <div style={{background:GREEN+"22",color:GREEN,padding:"6px 14px",borderRadius:6,fontWeight:"bold",fontSize:12}}>{statusLabels[trackResult.status]||trackResult.status}</div>
+          <div style={{background:T.white,borderRadius:16,border:`1px solid ${T.border}`,overflow:"hidden"}}>
+            <div style={{display:"grid",gridTemplateColumns:"48px 2fr 1fr 80px 80px 80px 80px 100px",padding:"14px 18px",background:T.cream,fontSize:10,fontWeight:700,letterSpacing:"1.5px",color:T.muted,textTransform:"uppercase",borderBottom:`1px solid ${T.border}`}}>
+              <span></span><span>Produit</span><span>Artisan</span><span>Prix</span><span>Stock</span><span>Vendus</span><span>Photos</span><span>Actions</span>
             </div>
-            <div style={{position:"relative",paddingLeft:24}}>
-              {TRACKING_STEPS.map((step,i)=>{const done=(trackResult.events||[]).some(e=>e.step===step.key);const isLast=i===TRACKING_STEPS.length-1;return(
-                <div key={step.key} style={{display:"flex",gap:14,marginBottom:isLast?0:20,position:"relative"}}>
-                  {!isLast&&<div style={{position:"absolute",left:12,top:28,width:2,height:"calc(100% - 4px)",background:done?G:BORDER}} />}
-                  <div style={{width:26,height:26,borderRadius:"50%",background:done?G:"white",border:done?"none":`2px solid ${BORDER}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0,zIndex:1}}>{done?step.icon:"○"}</div>
-                  <div style={{paddingTop:2}}><div style={{fontSize:13,fontWeight:done?"bold":"normal",color:done?DARK:MUTED}}>{step.label}</div><div style={{fontSize:11,color:MUTED}}>{step.desc}{(trackResult.events||[]).find(e=>e.step===step.key)?.note&&` · ${(trackResult.events||[]).find(e=>e.step===step.key).note}`}</div></div>
+            {filteredP.map(p=>(
+              <div key={p.id} style={{display:"grid",gridTemplateColumns:"48px 2fr 1fr 80px 80px 80px 80px 100px",padding:"14px 18px",alignItems:"center",borderBottom:`1px solid ${T.border}`,transition:"background .2s"}}
+                onMouseEnter={e=>e.currentTarget.style.background=T.cream} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <span style={{fontSize:24}}>{p.emoji}</span>
+                <div><div style={{fontSize:14,fontWeight:700,color:T.dark}}>{p.name}</div><div style={{fontSize:11,color:T.muted}}>{p.sub} · {p.country}</div></div>
+                <div style={{fontSize:13,color:T.muted}}>{p.artisan}, {p.city}</div>
+                <div style={{fontSize:14,fontWeight:700}}>{p.price} $</div>
+                <div style={{fontSize:13}}><span style={{color:p.stock<5?T.red:p.stock<10?T.orange:T.green,fontWeight:700}}>{p.stock}</span></div>
+                <div style={{fontSize:13,fontWeight:600}}>{p.sold}</div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{fontSize:12,fontWeight:700,color:(p.photos||[]).length>=5?T.green:(p.photos||[]).length>0?T.orange:T.muted}}>{(p.photos||[]).length}</span>
+                  <span style={{fontSize:10,color:T.muted}}>/ 5</span>
+                </div>
+                <div style={{display:"flex",gap:6}}>
+                  <button onClick={()=>setEditP({...p})} style={{background:T.cream,border:`1px solid ${T.border}`,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>✏️ Éditer</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>)}
+
+        {/* ════════ ORDERS ════════ */}
+        {page==="orders"&&(<>
+          <div style={{display:"flex",gap:8,marginBottom:24,flexWrap:"wrap"}}>
+            {["Toutes","confirmed","preparation","shipped","transit","delivered"].map(s=>{
+              const label=s==="Toutes"?"Toutes":STATUS_MAP[s]?.l||s;
+              const count=s==="Toutes"?orders.length:orders.filter(o=>o.status===s).length;
+              return <button key={s} style={{padding:"8px 16px",borderRadius:8,border:`1.5px solid ${T.border}`,background:T.white,fontSize:12,fontWeight:600,cursor:"pointer"}}>{label} ({count})</button>;
+            })}
+          </div>
+
+          <div style={{display:"grid",gap:14}}>
+            {orders.map(o=>(
+              <div key={o.id} style={{background:T.white,borderRadius:16,border:`1px solid ${T.border}`,padding:"24px",transition:"box-shadow .2s"}}
+                onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,.06)"} onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+                  <div>
+                    <div style={{fontSize:18,fontWeight:800,letterSpacing:"1.5px",color:T.dark,fontFamily:"'Playfair Display',Georgia,serif"}}>{o.id}</div>
+                    <div style={{fontSize:12,color:T.muted,marginTop:4}}>{o.date} · {o.client} · {o.email}</div>
+                    <div style={{fontSize:12,color:T.muted}}>{o.address}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:20,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:6}}>{o.total.toFixed(2)} $CA</div>
+                    <span style={{background:STATUS_MAP[o.status]?.c||"#666",color:"#fff",padding:"4px 14px",fontSize:11,fontWeight:700,borderRadius:100}}>{STATUS_MAP[o.status]?.l}</span>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+                  {o.items.map((item,i)=><div key={i} style={{background:T.cream,borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:600}}>{item.name} ×{item.qty} — {item.price} $</div>)}
+                  <div style={{background:T.ivory,borderRadius:8,padding:"8px 14px",fontSize:12,color:T.muted}}>💳 {o.payMethod}</div>
+                </div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <span style={{fontSize:11,fontWeight:700,color:T.muted,padding:"8px 0",marginRight:8}}>Changer statut →</span>
+                  {Object.entries(STATUS_MAP).map(([key,{l,c}])=>(
+                    <button key={key} onClick={()=>handleStatusChange(o.id,key)} style={{padding:"6px 14px",borderRadius:8,border:o.status===key?`2px solid ${c}`:`1px solid ${T.border}`,background:o.status===key?c:"transparent",color:o.status===key?"#fff":T.dark,fontSize:11,fontWeight:o.status===key?700:500,cursor:"pointer"}}>{l}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>)}
+
+        {/* ════════ ARTISANS ════════ */}
+        {page==="artisans"&&(<>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",gap:10,alignItems:"center"}}>
+              <input value={artSearch} onChange={e=>setArtSearch(e.target.value)} placeholder="🔍 Rechercher un artisan..." style={{padding:"10px 16px",border:`1.5px solid ${T.border}`,borderRadius:10,fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",width:260,background:T.white}}/>
+              <div style={{background:T.cream,borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,color:T.muted}}>{artisans.length} artisan{artisans.length>1?"s":""}</div>
+            </div>
+            <button onClick={()=>setShowNewArt(true)} style={{background:T.dark,color:"#fff",border:"none",padding:"12px 24px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,letterSpacing:".5px"}}>+ Nouvel artisan</button>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+            {filteredArt.map(a=>{
+              const artProducts=products.filter(p=>p.artisan===a.name||(p.artisan+", "+p.city)===a.name+", "+a.city);
+              const artRev=artProducts.reduce((s,p)=>s+p.price*p.sold,0);
+              const artSold=artProducts.reduce((s,p)=>s+p.sold,0);
+              return(
+                <div key={a.id} style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`,transition:"all .2s"}}
+                  onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 8px 24px rgba(0,0,0,.06)";e.currentTarget.style.borderColor=T.gold;}}
+                  onMouseLeave={e=>{e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor=T.border;}}>
+                  <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:14}}>
+                    <div style={{width:52,height:52,borderRadius:"50%",background:a.photo?"transparent":T.dark,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,border:`2px solid ${T.gold}`,flexShrink:0,overflow:"hidden"}}>
+                      {a.photo?<img src={a.photo} alt={a.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:a.emoji}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:15,fontWeight:700,fontFamily:"'Playfair Display',Georgia,serif"}}>{a.name}</div>
+                      <div style={{fontSize:11,color:T.muted}}>{a.metier}</div>
+                      <div style={{fontSize:11,color:T.muted}}>📍 {a.city}, {a.country}{a.exp?` · ⭐ ${a.exp}`:""}</div>
+                    </div>
+                  </div>
+
+                  {a.bio&&<p style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:14,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{a.bio}</p>}
+
+                  {(a.email||a.phone)&&(
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+                      {a.email&&<div style={{background:T.cream,borderRadius:6,padding:"4px 10px",fontSize:10,color:T.muted}}>✉️ {a.email}</div>}
+                      {a.phone&&<div style={{background:T.cream,borderRadius:6,padding:"4px 10px",fontSize:10,color:T.muted}}>📞 {a.phone}</div>}
+                    </div>
+                  )}
+
+                  <div style={{display:"flex",gap:10,marginBottom:16}}>
+                    <div style={{background:T.cream,borderRadius:10,padding:"10px 14px",flex:1,textAlign:"center"}}>
+                      <div style={{fontSize:18,fontWeight:800,color:T.dark}}>{artProducts.length}</div>
+                      <div style={{fontSize:10,color:T.muted,fontWeight:600}}>Produits</div>
+                    </div>
+                    <div style={{background:T.cream,borderRadius:10,padding:"10px 14px",flex:1,textAlign:"center"}}>
+                      <div style={{fontSize:18,fontWeight:800,color:T.dark}}>{artSold}</div>
+                      <div style={{fontSize:10,color:T.muted,fontWeight:600}}>Vendus</div>
+                    </div>
+                    <div style={{background:T.cream,borderRadius:10,padding:"10px 14px",flex:1,textAlign:"center"}}>
+                      <div style={{fontSize:18,fontWeight:800,color:T.green}}>{artRev>999?(artRev/1000).toFixed(1)+"K":artRev}</div>
+                      <div style={{fontSize:10,color:T.muted,fontWeight:600}}>Rev. $CA</div>
+                    </div>
+                  </div>
+
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>setEditArt({...a})} style={{flex:1,background:T.cream,border:`1px solid ${T.border}`,borderRadius:8,padding:"9px",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>✏️ Modifier</button>
+                    <button onClick={()=>handleDeleteArt(a.id)} style={{background:"transparent",border:`1px solid ${T.red}`,borderRadius:8,padding:"9px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:T.red,fontFamily:"'DM Sans',sans-serif"}}>🗑️</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filteredArt.length===0&&(
+            <div style={{textAlign:"center",padding:60,color:T.muted}}>
+              <div style={{fontSize:44}}>✂️</div>
+              <div style={{fontSize:16,marginTop:12,fontFamily:"'Playfair Display',Georgia,serif"}}>Aucun artisan trouvé</div>
+              <button onClick={()=>setShowNewArt(true)} style={{marginTop:16,background:T.dark,color:"#fff",border:"none",padding:"10px 24px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:600,borderRadius:100}}>+ Ajouter un artisan</button>
+            </div>
+          )}
+
+          {/* Call to action */}
+          <div style={{background:T.dark,padding:"36px 32px",borderRadius:16,marginTop:24,display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",inset:0,background:"radial-gradient(circle at 90% 50%,rgba(201,168,76,.08),transparent 50%)"}}/>
+            <div style={{position:"relative"}}>
+              <h3 style={{color:T.gold,fontSize:20,fontFamily:"'Playfair Display',Georgia,serif",fontWeight:700,marginBottom:6}}>Élargir le réseau</h3>
+              <p style={{color:"rgba(255,255,255,.4)",fontSize:13}}>Ajoutez de nouveaux artisans partenaires depuis toute l'Afrique.</p>
+            </div>
+            <button onClick={()=>setShowNewArt(true)} style={{background:T.gold,color:T.dark,border:"none",padding:"12px 28px",fontSize:13,fontWeight:700,cursor:"pointer",borderRadius:10,fontFamily:"'DM Sans',sans-serif",position:"relative",flexShrink:0}}>+ Nouvel artisan</button>
+          </div>
+        </>)}
+
+        {/* ════════ ANALYTICS ════════ */}
+        {page==="analytics"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+            <div style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`}}>
+              <h3 style={{fontSize:16,fontWeight:700,marginBottom:20,fontFamily:"'Playfair Display',Georgia,serif"}}>📊 Ventes par catégorie</h3>
+              {CATS.map(c=>{const catP=products.filter(p=>p.category===c.key);const catSold=catP.reduce((s,p)=>s+p.sold,0);const catRev=catP.reduce((s,p)=>s+p.price*p.sold,0);return(
+                <div key={c.key} style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+                  <span style={{fontSize:20}}>{c.emoji}</span>
+                  <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>{c.label}</div><div style={{fontSize:11,color:T.muted}}>{catSold} vendus · {(catRev/1000).toFixed(1)}K $</div>
+                    <div style={{width:"100%",height:6,background:T.sand,borderRadius:3,marginTop:6}}><div style={{width:`${(catSold/totalSold)*100}%`,height:"100%",background:c.color,borderRadius:3,transition:"width .5s"}}/></div>
+                  </div>
                 </div>
               );})}
             </div>
-            <div style={{marginTop:20,borderTop:`1px solid ${BORDER}`,paddingTop:14,textAlign:"right"}}><div style={{fontSize:20,fontWeight:"bold",color:RED}}>Total : {fmt(trackResult.total)} $</div></div>
-          </div>)}
-        </div>)}
-
-        {/* ═══ PANIER ═══ */}
-        {page==="panier"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",animation:"fadeUp .4s ease"}}>
-          <div style={{marginBottom:20}}><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:5}}>VOTRE SÉLECTION</div><h1 style={{fontSize:mobile?26:36,color:DARK}}>{payStep==="cart"?"Mon Panier":payStep==="info"?"Informations":"Confirmation"}</h1></div>
-
-          {payStep==="cart"&&(<>
-            {cart.length===0?<div style={{textAlign:"center",padding:60,color:MUTED}}><div style={{fontSize:52}}>🛒</div><div style={{marginTop:12,fontSize:16}}>Votre panier est vide</div><button onClick={()=>goPage("boutique")} style={{marginTop:16,background:DARK,color:G,border:"none",padding:"12px 24px",fontFamily:"Georgia",fontSize:13,borderRadius:6}}>Découvrir la boutique</button></div>
-            :<div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"2fr 1fr",gap:20}}>
-              <div>{cart.map(item=>(<div key={item.id} style={{display:"flex",gap:14,padding:"16px",background:CREAM,border:"1px solid "+BORDER,borderRadius:8,marginBottom:10}}>
-                <div style={{width:70,height:70,borderRadius:6,background:`linear-gradient(145deg,${item.color||BROWN},${DARK})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{fontSize:28}}>{CATEGORIES.find(c=>c.key===item.category)?.emoji||"✨"}</span></div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:"bold",color:DARK}}>{item.name}</div>
-                  <div style={{fontSize:11,color:MUTED}}>✂️ {item.artisan}</div>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginTop:8}}>
-                    <button onClick={()=>updateQty(item.id,-1)} style={{width:28,height:28,background:"white",border:"1px solid "+BORDER,borderRadius:4,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
-                    <span style={{fontWeight:"bold",fontSize:14}}>{item.qty}</span>
-                    <button onClick={()=>updateQty(item.id,1)} style={{width:28,height:28,background:"white",border:"1px solid "+BORDER,borderRadius:4,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
-                    <span style={{flex:1}} />
-                    <span style={{fontSize:16,fontWeight:"bold",color:RED}}>{fmt(item.price*item.qty)} $</span>
-                    <button onClick={()=>removeItem(item.id)} style={{background:"none",border:"none",fontSize:16,color:"#999"}}>✕</button>
+            <div style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`}}>
+              <h3 style={{fontSize:16,fontWeight:700,marginBottom:20,fontFamily:"'Playfair Display',Georgia,serif"}}>🌍 Ventes par pays</h3>
+              {["Sénégal","Ghana","Mali","Nigeria","Togo","Burkina Faso","Mauritanie"].map(country=>{const catP=products.filter(p=>p.country===country);const catSold=catP.reduce((s,p)=>s+p.sold,0);if(!catSold)return null;return(
+                <div key={country} style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+                  <div style={{width:8,height:8,borderRadius:"50%",background:T.gold}}/>
+                  <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>{country}</div><div style={{fontSize:11,color:T.muted}}>{catSold} articles vendus</div>
+                    <div style={{width:"100%",height:6,background:T.sand,borderRadius:3,marginTop:6}}><div style={{width:`${(catSold/totalSold)*100}%`,height:"100%",background:T.gold,borderRadius:3}}/></div>
                   </div>
                 </div>
-              </div>))}</div>
-              <div style={{background:CREAM,border:"1px solid "+BORDER,padding:"20px",borderRadius:8,alignSelf:"start"}}>
-                <h3 style={{fontSize:14,color:DARK,marginBottom:12,borderBottom:"1px solid "+BORDER,paddingBottom:8}}>Récapitulatif</h3>
-                {[["Sous-total",`${fmt(subtotal)} $`],["Livraison",shipping===0?"GRATUIT ✨":`${shipping} $`],["Taxes (14.975%)",`${fmt(taxes)} $`]].map(([l,v])=>(<div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontSize:13}}><span style={{color:MUTED}}>{l}</span><span>{v}</span></div>))}
-                <div style={{borderTop:`2px solid ${DARK}`,paddingTop:12,marginTop:8,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:15,fontWeight:"bold"}}>Total</span><span style={{fontSize:19,fontWeight:"bold",color:RED}}>{fmt(total)} $</span></div>
-                <button onClick={()=>setPayStep("info")} style={{width:"100%",background:DARK,color:G,border:"none",padding:"14px",marginTop:14,fontSize:13,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,textTransform:"uppercase",borderRadius:6}}>Passer la commande →</button>
-                <div style={{textAlign:"center",marginTop:8,fontSize:10,color:MUTED}}>🔒 Paiement sécurisé · Livraison suivie</div>
-              </div>
-            </div>}
-          </>)}
-
-          {payStep==="info"&&(<div style={{maxWidth:600}}>
-            <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"20px":"32px",borderRadius:8}}>
-              <h3 style={{fontSize:16,color:DARK,marginBottom:18}}>📋 Vos informations</h3>
-              <FInp label="Nom complet *" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Mamadou Diallo" />
-              <FInp label="Email *" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="votre@email.com" />
-              <FInp label="Téléphone" type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="438-XXX-XXXX" />
-              <FInp label="Adresse *" value={form.address} onChange={e=>setForm({...form,address:e.target.value})} placeholder="1234 Rue Exemple" />
-              <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10}}>
-                <FInp label="Ville" value={form.city} onChange={e=>setForm({...form,city:e.target.value})} />
-                <FInp label="Province" value={form.province} onChange={e=>setForm({...form,province:e.target.value})} />
-                <FInp label="Code postal" value={form.postal} onChange={e=>setForm({...form,postal:e.target.value})} placeholder="H2X 1Y4" />
-              </div>
-              <div style={{borderTop:"1px solid "+BORDER,paddingTop:16,marginTop:8,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-                <div style={{fontSize:18,fontWeight:"bold",color:RED}}>Total : {fmt(total)} $</div>
-                <div style={{display:"flex",gap:10}}>
-                  <button onClick={()=>setPayStep("cart")} style={{background:"white",color:DARK,border:"1px solid "+BORDER,padding:"12px 20px",fontFamily:"Georgia",fontSize:12,borderRadius:6}}>← Retour</button>
-                  <button onClick={confirmOrder} style={{background:GREEN,color:"white",border:"none",padding:"12px 24px",fontFamily:"Georgia",fontSize:13,fontWeight:"bold",letterSpacing:1,borderRadius:6}}>Confirmer la commande ✓</button>
-                </div>
+              );})}
+            </div>
+            <div style={{background:T.white,borderRadius:16,padding:"24px",border:`1px solid ${T.border}`,gridColumn:"1/-1"}}>
+              <h3 style={{fontSize:16,fontWeight:700,marginBottom:16,fontFamily:"'Playfair Display',Georgia,serif"}}>📷 Couverture photo des produits</h3>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+                {products.map(p=>(
+                  <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:T.cream,borderRadius:10}}>
+                    <span style={{fontSize:20}}>{p.emoji}</span>
+                    <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div></div>
+                    <div style={{fontSize:12,fontWeight:700,color:(p.photos||[]).length>=5?T.green:(p.photos||[]).length>0?T.orange:T.red}}>{(p.photos||[]).length}/5</div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>)}
-        </div>)}
-
-        {/* ═══ SUR MESURE ═══ */}
-        {page==="commande"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",maxWidth:700,margin:"0 auto",animation:"fadeUp .4s ease"}}>
-          <div style={{marginBottom:20}}><div style={{fontSize:10,letterSpacing:5,color:RED,marginBottom:5}}>PERSONNALISÉ</div><h1 style={{fontSize:mobile?26:36,color:DARK,marginBottom:8}}>Commande sur mesure</h1><p style={{color:MUTED,fontSize:14}}>Décrivez le vêtement ou produit que vous souhaitez, et nos artisans le créeront pour vous.</p></div>
-          <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"20px":"32px",borderRadius:8}}>
-            <FInp label="Nom complet" placeholder="Mamadou Diallo" />
-            <FInp label="Email" type="email" placeholder="votre@email.com" />
-            <FInp label="Téléphone / WhatsApp" type="tel" placeholder={PHONE} />
-            <div style={{marginBottom:16}}><label style={{display:"block",fontSize:10,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:5,fontWeight:"bold"}}>Catégorie</label><select style={{width:"100%",padding:"12px 14px",background:"white",border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",borderRadius:6}}>
-              {["Habillement Homme","Habillement Femme","Habillement Enfant","Oeuvre d'art","Divers / Accessoires"].map(o=><option key={o}>{o}</option>)}
-            </select></div>
-            <div style={{marginBottom:16}}><label style={{display:"block",fontSize:10,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:5,fontWeight:"bold"}}>Détails de la commande</label><textarea placeholder="Décrivez le produit souhaité : couleurs, taille, matières, occasion..." rows={5} style={{width:"100%",padding:"12px 14px",background:"white",border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",resize:"vertical",borderRadius:6}} /></div>
-            <div style={{marginBottom:20}}><label style={{display:"block",fontSize:10,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:5,fontWeight:"bold"}}>Budget estimé</label><select style={{width:"100%",padding:"12px 14px",background:"white",border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",borderRadius:6}}>
-              {["Moins de 50 $CA","50 – 150 $CA","150 – 300 $CA","300 – 500 $CA","Plus de 500 $CA"].map(o=><option key={o}>{o}</option>)}
-            </select></div>
-            <button onClick={()=>toast("Demande envoyée avec succès ! Nous vous répondons sous 48h.")} style={{width:"100%",background:DARK,color:G,border:"none",padding:"16px",fontSize:13,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:3,textTransform:"uppercase",borderRadius:6}}>ENVOYER MA DEMANDE</button>
-            <div style={{textAlign:"center",marginTop:10,fontSize:10,color:MUTED}}>🔒 Données protégées · Réponse garantie sous 48h</div>
           </div>
-        </div>)}
-      </div>
+        )}
 
-      {/* ═══ FOOTER ═══ */}
-      <footer style={{background:"#0D0500",color:"#A0845C",padding:mobile?"28px 0 14px":"44px 0 20px",borderTop:"3px solid #3A1F00",marginTop:40}}>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+(mobile?"14px":"24px"),display:"grid",gridTemplateColumns:mobile?"1fr":tablet?"1fr 1fr":"2fr 1fr 1fr 1fr",gap:mobile?20:30,marginBottom:20}}>
-          <div><div style={{fontSize:20,color:G,letterSpacing:5,fontWeight:"bold",marginBottom:10}}>BADAOUR</div><p style={{fontSize:12,lineHeight:1.8,color:MUTED}}>L'Afrique à votre porte. Commerce éthique, artisanat authentique.</p><div style={{marginTop:10,fontSize:12,color:MUTED}}>📞 {PHONE}<br/>✉️ {EMAIL}</div></div>
-          {!mobile&&[["Boutique",["Homme","Femme","Enfant","Art","Divers"]],["Services",["Livraison","Sur mesure","Suivi","Contact"]],["Info",["À propos","Artisans","FAQ","Retours"]]].map(([t,links])=>(<div key={t}><div style={{color:G,fontWeight:"bold",letterSpacing:2,fontSize:10,textTransform:"uppercase",marginBottom:10}}>{t}</div>{links.map(l=><div key={l} style={{color:MUTED,fontSize:12,marginBottom:6,cursor:"pointer"}}>{l}</div>)}</div>))}
+        {/* ════════ SETTINGS ════════ */}
+        {page==="settings"&&(
+          <div style={{maxWidth:600}}>
+            <div style={{background:T.white,borderRadius:16,padding:"28px",border:`1px solid ${T.border}`,marginBottom:16}}>
+              <h3 style={{fontSize:16,fontWeight:700,marginBottom:20,fontFamily:"'Playfair Display',Georgia,serif"}}>🏪 Informations boutique</h3>
+              <div style={{display:"grid",gap:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:`1px solid ${T.border}`}}><span style={{color:T.muted,fontWeight:600}}>Nom</span><span style={{fontWeight:700}}>BADAOUR</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:`1px solid ${T.border}`}}><span style={{color:T.muted,fontWeight:600}}>Téléphone</span><span>{PHONE}</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:`1px solid ${T.border}`}}><span style={{color:T.muted,fontWeight:600}}>Email</span><span>{EMAIL}</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:`1px solid ${T.border}`}}><span style={{color:T.muted,fontWeight:600}}>Localisation</span><span>Montréal, Québec, Canada</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0"}}><span style={{color:T.muted,fontWeight:600}}>Frais livraison</span><span>18 $CA</span></div>
+              </div>
+            </div>
+            <div style={{background:T.white,borderRadius:16,padding:"28px",border:`1px solid ${T.border}`}}>
+              <h3 style={{fontSize:16,fontWeight:700,marginBottom:16,fontFamily:"'Playfair Display',Georgia,serif"}}>🔗 Liens</h3>
+              <div style={{background:T.cream,borderRadius:10,padding:"14px",marginBottom:10}}>
+                <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>Boutique (client)</div>
+                <div style={{fontSize:14,fontWeight:600,color:T.blue}}>badaour.com</div>
+              </div>
+              <div style={{background:T.cream,borderRadius:10,padding:"14px"}}>
+                <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:"1px",marginBottom:4}}>Administration</div>
+                <div style={{fontSize:14,fontWeight:600,color:T.blue}}>admin.badaour.com</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         </div>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+(mobile?"14px":"24px"),borderTop:"1px solid #3A1F00",paddingTop:12,display:"flex",justifyContent:"space-between",fontSize:10,flexWrap:"wrap",gap:4}}><span>© 2025 BADAOUR · Montréal, Québec, Canada</span><span style={{color:G}}>❤️ Fait avec amour pour la diaspora africaine</span></div>
-      </footer>
+      </div>
     </div>
   );
 }

@@ -241,7 +241,15 @@ export default function BADAOUR(){
   const removeItem=(id)=>{setCart(p=>p.filter(i=>i.id!==id));toast("Article retiré","info");};
   const toggleWish=(id)=>setWish(w=>w.includes(id)?w.filter(x=>x!==id):[...w,id]);
 
-  const handlePay=()=>{setProc(true);setTimeout(()=>{const o={id:genId(),date:new Date().toLocaleDateString("fr-CA"),status:"confirmed",items:[...cart],total,shipping,client:form.name,address:`${form.address}, ${form.city}, ${form.province} ${form.postal}`,payMethod:payMethod==="card"?"Carte":"Interac",events:[{step:"confirmed",date:new Date().toLocaleString("fr-CA"),note:"Paiement reçu"}]};setOrders(p=>[o,...p]);if(user)setAcc(a=>a.map(u=>u.email===user.email?{...u,orders:[o,...(u.orders||[])]}:u));setLast(o);setCart([]);setPay("cart");setProc(false);setPage("confirmation");},2500);};
+  const handlePay=async()=>{
+    setProc(true);
+    try {
+      const res=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:cart,customerInfo:{name:form.name,email:form.email,address:form.address,city:form.city,province:form.province,postal:form.postal,phone:form.phone}})});
+      const data=await res.json();
+      if(data.url){window.location.href=data.url;}
+      else{toast("Erreur paiement — réessayez","err");setProc(false);}
+    } catch(e){toast("Erreur connexion — réessayez","err");setProc(false);}
+  };
 
   const doTrack=()=>{setTerr("");setTres(null);const all=user?(accounts.find(u=>u.email===user.email)?.orders||[]).concat(orders):orders;const f=all.find(o=>o.id.toLowerCase()===trackId.toLowerCase().trim());f?setTres(f):setTerr("Aucune commande trouvée.");};
 

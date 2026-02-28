@@ -15,6 +15,7 @@ const PHONE = "438-988-6682";
 const EMAIL = "service@badaour.com";
 
 // ─── PRODUCT DATA ────────────────────────────────────────────────────────────
+const GITHUB_PRODUCTS_URL = "https://raw.githubusercontent.com/Badaour/badaour/main/data/products.json";
 const DEFAULT_PRODUCTS = [
   { id:1, name:"Grand Boubou Brodé", category:"homme", sub:"Boubou", artisan:"Moussa Diallo", city:"Dakar", country:"Sénégal", price:189, tag:"Best", desc:"Broderie main sur bazin riche, teinture naturelle indigo. Tailles S à XXL.", gradient:"linear-gradient(135deg,#1A3A6B,#0D2550,#1A3A6B)", emoji:"👘" },
   { id:2, name:"Dashiki Festif", category:"homme", sub:"Chemise", artisan:"Koffi Asante", city:"Accra", country:"Ghana", price:78, tag:"Nouveau", desc:"Coton léger brodé, col en V, manches courtes. Couleurs vives traditionnelles.", gradient:"linear-gradient(135deg,#E74C3C,#C0392B,#A93226)", emoji:"👔" },
@@ -33,7 +34,6 @@ const DEFAULT_PRODUCTS = [
   { id:15, name:"Huile de Karité Pure", category:"divers", sub:"Beauté", artisan:"Mariam Ouédraogo", city:"Ouagadougou", country:"Burkina Faso", price:34, tag:"Bio", desc:"Karité brut non raffiné, coopérative de femmes. 100% naturel. 200ml.", gradient:"linear-gradient(135deg,#C8956C,#A07820,#8B6A3E)", emoji:"🧴" },
   { id:16, name:"Tissu Wax 6 yards", category:"divers", sub:"Tissu", artisan:"Koffi Mensah", city:"Lomé", country:"Togo", price:58, tag:"Populaire", desc:"Wax hollandais authentique double face. Motifs exclusifs. 6 yards.", gradient:"linear-gradient(135deg,#E74C3C,#F1C40F,#27AE60)", emoji:"🧵" },
 ];
-// Products loaded dynamically from API — see useEffect in main component
 
 const CATEGORIES = [
   { key:"homme", label:"Homme", emoji:"👘", color:"#1A3A6B", full:"Habillement Homme", desc:"Boubous, dashikis, agbadas, tenues de cérémonie" },
@@ -172,6 +172,7 @@ function Summary({cart,subtotal,shipping,taxes,total,onContinue,address}){
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 export default function BADAOUR(){
   const [page,setPage]=useState("home");
+  const [products,setProducts]=useState(DEFAULT_PRODUCTS);
   const [cat,setCat]=useState(null);
   const [search,setSearch]=useState("");
   const [cart,setCart]=useState([]);
@@ -195,8 +196,8 @@ export default function BADAOUR(){
   const [products,setProds]=useState(DEFAULT_PRODUCTS);
 
   useEffect(()=>{
-    fetch("https://raw.githubusercontent.com/Badaour/badaour/main/public/products.json?t="+Date.now())
-      .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setProds(data);}).catch(()=>{});
+    fetch(GITHUB_PRODUCTS_URL+"?t="+Date.now())
+      .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setProducts(data);}).catch(()=>{});
   },[]);
 
   // Hero animation states

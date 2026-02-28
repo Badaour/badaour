@@ -127,12 +127,14 @@ function PhotoUploader({photos=[],onChange,maxPhotos=8}){
 }
 
 // ─── MAIN ADMIN PANEL ────────────────────────────────────────────────────────
+const GITHUB_PRODUCTS_URL = "https://raw.githubusercontent.com/Badaour/badaour/main/data/products.json";
+
 export default function BADAOURAdmin(){
   const [page,setPage]=useState("dashboard");
   const [products,setProducts]=useState(initProducts);
 
   useEffect(()=>{
-    fetch("https://raw.githubusercontent.com/Badaour/badaour/main/public/products.json?t="+Date.now())
+    fetch(GITHUB_PRODUCTS_URL+"?t="+Date.now())
       .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setProducts(data);}).catch(()=>{});
   },[]);
 
@@ -187,10 +189,10 @@ export default function BADAOURAdmin(){
   const handleSaveNew=()=>{
     if(!newP.name||!newP.price){toast("❌ Nom et prix obligatoires");return;}
     const p={...newP,id:Date.now(),price:+newP.price,stock:+newP.stock||0,sold:0};
-    const updated=[p,...prev];saveToGitHub(updated);return updated;
+    setProducts(prev=>{const u=[p,...prev];saveToGitHub(u);return u;});
     setShowNew(false);
     setNewP({name:"",category:"homme",sub:"",artisan:"",city:"",country:"Sénégal",price:"",stock:"",tag:"Nouveau",desc:"",emoji:"👘",photos:[]});
-    toast("✅ Produit ajouté avec succès !");
+    toast("✅ Produit ajouté ! Visible sur la boutique dans ~30s");
   };
 
   const handleUpdateProduct=(updated)=>{

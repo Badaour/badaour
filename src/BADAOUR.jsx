@@ -193,7 +193,6 @@ export default function BADAOUR(){
   const [user,setUser]=useState(null);
   const [accounts,setAcc]=useState([{firstName:"Mamadou",lastName:"Diallo",email:"mamadou@test.com",password:"test123",orders:DEMO_ORDERS}]);
   const [mobileMenu,setMM]=useState(false);
-  const [products,setProds]=useState(DEFAULT_PRODUCTS);
 
   useEffect(()=>{
     fetch(GITHUB_PRODUCTS_URL+"?t="+Date.now())

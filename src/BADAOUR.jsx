@@ -192,6 +192,12 @@ export default function BADAOUR(){
   const [user,setUser]=useState(null);
   const [accounts,setAcc]=useState([{firstName:"Mamadou",lastName:"Diallo",email:"mamadou@test.com",password:"test123",orders:DEMO_ORDERS}]);
   const [mobileMenu,setMM]=useState(false);
+  const [products,setProds]=useState(DEFAULT_PRODUCTS);
+
+  useEffect(()=>{
+    fetch("https://raw.githubusercontent.com/Badaour/badaour/main/public/products.json?t="+Date.now())
+      .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setProds(data);}).catch(()=>{});
+  },[]);
 
   // Hero animation states
   const [heroPh,setHeroPh]=useState(0);
@@ -257,7 +263,7 @@ export default function BADAOUR(){
   const handleLogin=()=>{const u=accounts.find(u=>u.email===authForm.email&&u.password===authForm.password);u?(setUser(u),setPage("compte"),toast(`Bienvenue, ${u.firstName} !`)):toast("Identifiants incorrects","info");};
   const handleRegister=()=>{if(!authForm.firstName||!authForm.email||!authForm.password){toast("Remplissez tous les champs","info");return;}if(authForm.password!==authForm.confirm){toast("Mots de passe différents","info");return;}if(accounts.find(u=>u.email===authForm.email)){toast("Email déjà utilisé","info");return;}const n={firstName:authForm.firstName,lastName:authForm.lastName,email:authForm.email,password:authForm.password,orders:[]};setAcc(a=>[...a,n]);setUser(n);setPage("compte");toast(`Bienvenue, ${n.firstName} !`);};
 
-  const filtered=PRODUCTS.filter(p=>{const mc=cat?p.category===cat:true;const q=search.toLowerCase();const mq=!q||p.name.toLowerCase().includes(q)||p.artisan.toLowerCase().includes(q)||p.country.toLowerCase().includes(q);return mc&&mq;});
+  const filtered=products.filter(p=>{const mc=cat?p.category===cat:true;const q=search.toLowerCase();const mq=!q||p.name.toLowerCase().includes(q)||p.artisan.toLowerCase().includes(q)||p.country.toLowerCase().includes(q);return mc&&mq;});
 
   const nav=[{k:"home",l:"Accueil"},{k:"boutique",l:"Boutique"},{k:"artisans",l:"Artisans"},{k:"suivi",l:"Suivi"},{k:"commande",l:"Sur mesure"}];
 
@@ -481,7 +487,7 @@ export default function BADAOUR(){
               <button onClick={()=>{setPage("boutique");setCat(null);setSearch("");}} style={{background:"transparent",border:`2px solid ${T.dark}`,color:T.dark,padding:"10px 24px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:600,borderRadius:100,letterSpacing:".5px"}}>Voir tout →</button>
             </div>
             <div className="grid-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:20}}>
-              {[PRODUCTS[0],PRODUCTS[3],PRODUCTS[9],PRODUCTS[13]].map((p,i)=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} style={{animation:`fadeIn .4s ease ${i*.1}s both`}}/>)}
+              {[products[0],products[3],products[9]||products[5],products[13]||products[6]].filter(Boolean).map((p,i)=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} style={{animation:`fadeIn .4s ease ${i*.1}s both`}}/>)}
             </div>
           </div>
 

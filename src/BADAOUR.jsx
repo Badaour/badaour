@@ -1,425 +1,457 @@
 import { useState, useEffect } from "react";
 
-// ─── THEME ───────────────────────────────────────────────────────────────────
-const G = "#D4AF37";
-const DARK = "#1A0A00";
-const RED = "#8B1A00";
-const CREAM = "#FFF8EE";
-const BG = "#FDF6EC";
-const BGALT = "#F5ECD9";
-const BORDER = "#E8D5B7";
-const MUTED = "#8B6A3E";
-const GREEN = "#2E8B57";
-const BROWN = "#3D1A00";
-const PHONE = "438-988-6682";
-const EMAIL = "service@badaour.com";
+// ═══════════════════════════════════════════════════════════════
+// BADAOUR — ADMINISTRATION (données persistantes partagées)
+// ═══════════════════════════════════════════════════════════════
 
-function useScreen() {
-  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
-  useEffect(() => { const h = () => setW(window.innerWidth); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
-  return { w, mobile: w < 640, tablet: w >= 640 && w < 1024, desktop: w >= 1024 };
-}
+const A = {
+  bg:"#0C0C10", surface:"#16161E", surface2:"#1E1E2A", surface3:"#262636",
+  border:"#2A2A3C", borderLight:"#363650",
+  accent:"#D4AF37", accentDim:"#A08628", accentGlow:"rgba(212,175,55,.15)",
+  text:"#E8E6E3", textDim:"#A0A0B4", textMuted:"#6A6A82",
+  success:"#34D399", successBg:"rgba(52,211,153,.12)",
+  warning:"#FBBF24", warningBg:"rgba(251,191,36,.12)",
+  danger:"#EF4444", dangerBg:"rgba(239,68,68,.12)",
+  info:"#60A5FA", infoBg:"rgba(96,165,250,.12)",
+};
+const G="#D4AF37", DARK="#1A0A00";
+const ADMIN_EMAIL="admin@badaour.com", ADMIN_PASSWORD="badaour2025";
 
-const PRODUCTS = [
-  { id:1, name:"Grand Boubou Brodé", category:"homme", sub:"Boubou", artisan:"Moussa Diallo", city:"Dakar", country:"Sénégal", price:189, tag:"Bestseller", desc:"Broderie main sur bazin riche, teinture naturelle indigo.", rating:4.8, color:"#1A3A6B" },
-  { id:2, name:"Dashiki Festif", category:"homme", sub:"Chemise", artisan:"Koffi Asante", city:"Accra", country:"Ghana", price:78, tag:"Nouveau", desc:"Coton léger brodé, col en V, manches courtes.", rating:4.6, color:"#E74C3C" },
-  { id:3, name:"Agbada Cérémonie", category:"homme", sub:"Tenue complète", artisan:"Adebayo Okafor", city:"Lagos", country:"Nigeria", price:245, tag:"Premium", desc:"Ensemble 3 pièces broderie dorée.", rating:4.9, color:"#6B2FA0" },
-  { id:4, name:"Robe Wax Élégance", category:"femme", sub:"Robe", artisan:"Fatoumata Koné", city:"Bamako", country:"Mali", price:134, tag:"Bestseller", desc:"Robe droite en wax hollandais, ceinture tissée.", rating:4.7, color:"#E74C3C" },
-  { id:5, name:"Ensemble Bogolan Chic", category:"femme", sub:"Ensemble", artisan:"Awa Traoré", city:"Bamako", country:"Mali", price:168, tag:"Artisanal", desc:"Haut et jupe assortis en bogolan peint à la main.", rating:4.8, color:"#8B5E3C" },
-  { id:6, name:"Kaftan Soirée Brodé", category:"femme", sub:"Kaftan", artisan:"Aïcha Diop", city:"Dakar", country:"Sénégal", price:212, tag:"Premium", desc:"Kaftan voile de coton, broderie au fil d'or.", rating:4.9, color:"#1A1060" },
-  { id:7, name:"Mini Boubou Enfant", category:"enfant", sub:"Boubou", artisan:"Moussa Diallo", city:"Dakar", country:"Sénégal", price:64, tag:"Populaire", desc:"Version enfant. Tissu doux coton. 2 à 12 ans.", rating:4.5, color:"#27AE60" },
-  { id:8, name:"Robe Wax Princesse", category:"enfant", sub:"Robe", artisan:"Koffi Mensah", city:"Lomé", country:"Togo", price:52, tag:"Nouveau", desc:"Robe à volants en wax coloré. 3 à 10 ans.", rating:4.6, color:"#E91E8C" },
-  { id:9, name:"Ensemble Kente Junior", category:"enfant", sub:"Ensemble", artisan:"Kweku Mensah", city:"Kumasi", country:"Ghana", price:89, tag:"Premium", desc:"Ensemble kente tissé main. 4 à 14 ans.", rating:4.7, color:"#F4A300" },
-  { id:10, name:"Masque Baoulé Ancien", category:"art", sub:"Masque", artisan:"Cheikh Ndiaye", city:"Thiès", country:"Sénégal", price:320, tag:"Unique", desc:"Masque Goli sculpté, bois de venn.", rating:5.0, color:"#6B2800" },
-  { id:11, name:"Sculpture Baobab", category:"art", sub:"Sculpture", artisan:"Cheikh Ndiaye", city:"Thiès", country:"Sénégal", price:275, tag:"Artisanal", desc:"Baobab sculpté ébène, base laiton.", rating:4.9, color:"#4A2800" },
-  { id:12, name:"Tableau Toile d'Afrique", category:"art", sub:"Tableau", artisan:"Ibrahima Sow", city:"Dakar", country:"Sénégal", price:195, tag:"Nouveau", desc:"Peinture acrylique sur toile, thème village.", rating:4.7, color:"#E67E22" },
-  { id:13, name:"Collier Krobo Perles", category:"divers", sub:"Bijou", artisan:"Abena Asante", city:"Accra", country:"Ghana", price:86, tag:"Populaire", desc:"Perles Krobo faites à la flamme.", rating:4.6, color:"#D4AF37" },
-  { id:14, name:"Sac Bogolan Cuir", category:"divers", sub:"Sac", artisan:"Fatoumata Koné", city:"Bamako", country:"Mali", price:112, tag:"Artisanal", desc:"Sac bogolan, cuir tannage végétal.", rating:4.8, color:"#8B5E3C" },
-  { id:15, name:"Huile de Karité Pure", category:"divers", sub:"Beauté", artisan:"Mariam Ouédraogo", city:"Ouaga", country:"Burkina Faso", price:34, tag:"Bio", desc:"Karité brut non raffiné. 200ml.", rating:4.4, color:"#E8D5A0" },
-  { id:16, name:"Tissu Wax 6 yards", category:"divers", sub:"Tissu", artisan:"Koffi Mensah", city:"Lomé", country:"Togo", price:58, tag:"Populaire", desc:"Wax hollandais double face. 6 yards.", rating:4.5, color:"#E74C3C" },
+const DEFAULT_PRODUCTS = [
+  {id:1,name:"Grand Boubou Brodé",category:"homme",sub:"Boubou",artisan:"Moussa Diallo",city:"Dakar",country:"Sénégal",price:189,cost:65,stock:12,tag:"Bestseller",desc:"Broderie bazin riche",sales:47,rating:4.8},
+  {id:2,name:"Dashiki Festif",category:"homme",sub:"Chemise",artisan:"Koffi Asante",city:"Accra",country:"Ghana",price:78,cost:28,stock:25,tag:"Nouveau",desc:"Coton brodé",sales:32,rating:4.6},
+  {id:3,name:"Agbada Cérémonie",category:"homme",sub:"Tenue complète",artisan:"Adebayo Okafor",city:"Lagos",country:"Nigeria",price:245,cost:90,stock:5,tag:"Premium",desc:"3 pièces broderie dorée",sales:18,rating:4.9},
+  {id:4,name:"Robe Wax Élégance",category:"femme",sub:"Robe",artisan:"Fatoumata Koné",city:"Bamako",country:"Mali",price:134,cost:48,stock:18,tag:"Bestseller",desc:"Wax hollandais",sales:63,rating:4.7},
+  {id:5,name:"Ensemble Bogolan Chic",category:"femme",sub:"Ensemble",artisan:"Awa Traoré",city:"Bamako",country:"Mali",price:168,cost:55,stock:8,tag:"Artisanal",desc:"Bogolan peint",sales:29,rating:4.8},
+  {id:6,name:"Kaftan Soirée Brodé",category:"femme",sub:"Kaftan",artisan:"Aïcha Diop",city:"Dakar",country:"Sénégal",price:212,cost:75,stock:6,tag:"Premium",desc:"Voile coton, fil d'or",sales:21,rating:4.9},
+  {id:7,name:"Mini Boubou Enfant",category:"enfant",sub:"Boubou",artisan:"Moussa Diallo",city:"Dakar",country:"Sénégal",price:64,cost:22,stock:30,tag:"Populaire",desc:"Coton doux",sales:55,rating:4.5},
+  {id:8,name:"Robe Wax Princesse",category:"enfant",sub:"Robe",artisan:"Koffi Mensah",city:"Lomé",country:"Togo",price:52,cost:18,stock:22,tag:"Nouveau",desc:"Wax coloré",sales:41,rating:4.6},
+  {id:9,name:"Ensemble Kente Junior",category:"enfant",sub:"Ensemble",artisan:"Kweku Mensah",city:"Kumasi",country:"Ghana",price:89,cost:32,stock:14,tag:"Premium",desc:"Kente tissé",sales:26,rating:4.7},
+  {id:10,name:"Masque Baoulé Ancien",category:"art",sub:"Masque",artisan:"Cheikh Ndiaye",city:"Thiès",country:"Sénégal",price:320,cost:110,stock:3,tag:"Unique",desc:"Goli bois venn",sales:8,rating:5.0},
+  {id:11,name:"Sculpture Baobab",category:"art",sub:"Sculpture",artisan:"Cheikh Ndiaye",city:"Thiès",country:"Sénégal",price:275,cost:95,stock:4,tag:"Artisanal",desc:"Ébène laiton",sales:12,rating:4.9},
+  {id:12,name:"Tableau Toile d'Afrique",category:"art",sub:"Tableau",artisan:"Ibrahima Sow",city:"Dakar",country:"Sénégal",price:195,cost:68,stock:7,tag:"Nouveau",desc:"Acrylique toile",sales:15,rating:4.7},
+  {id:13,name:"Collier Krobo Perles",category:"divers",sub:"Bijou",artisan:"Abena Asante",city:"Accra",country:"Ghana",price:86,cost:30,stock:20,tag:"Populaire",desc:"Perles Krobo",sales:38,rating:4.6},
+  {id:14,name:"Sac Bogolan Cuir",category:"divers",sub:"Sac",artisan:"Fatoumata Koné",city:"Bamako",country:"Mali",price:112,cost:40,stock:11,tag:"Artisanal",desc:"Cuir végétal",sales:24,rating:4.8},
+  {id:15,name:"Huile de Karité Pure",category:"divers",sub:"Beauté",artisan:"Mariam Ouédraogo",city:"Ouaga",country:"Burkina Faso",price:34,cost:10,stock:45,tag:"Bio",desc:"200ml bio",sales:89,rating:4.4},
+  {id:16,name:"Tissu Wax 6 yards",category:"divers",sub:"Tissu",artisan:"Koffi Mensah",city:"Lomé",country:"Togo",price:58,cost:20,stock:35,tag:"Populaire",desc:"Double face",sales:72,rating:4.5},
 ];
 
-const CATEGORIES = [
-  { key:"homme", label:"Homme", full:"Habillement Homme", emoji:"👘", color:"#1A3A6B", desc:"Boubous, dashikis, agbadas" },
-  { key:"femme", label:"Femme", full:"Habillement Femme", emoji:"👗", color:"#8B1A00", desc:"Robes wax, kaftans, bogolan" },
-  { key:"enfant", label:"Enfant", full:"Habillement Enfant", emoji:"🧒", color:"#27AE60", desc:"Boubous, robes, ensembles" },
-  { key:"art", label:"Art", full:"Oeuvres d'Art", emoji:"🏺", color:"#6A0572", desc:"Sculptures, masques, tableaux" },
-  { key:"divers", label:"Divers", full:"Divers & Accessoires", emoji:"✨", color:"#D4AF37", desc:"Bijoux, sacs, tissus, beauté" },
+const DEFAULT_ORDERS = [
+  {id:"BDR-2025-0042",date:"2025-01-10",status:"transit",customer:"Mamadou Diallo",email:"mamadou@mail.com",phone:"438-555-0101",address:"4500 Rue Sherbrooke, Mtl",items:[{pid:1,qty:1,name:"Grand Boubou Brodé",price:189},{pid:4,qty:1,name:"Robe Wax Élégance",price:134}],total:355.25,shipping:18,payMethod:"Interac",events:[{step:"confirmed",date:"10 jan"},{step:"preparation",date:"11 jan"},{step:"shipped",date:"15 jan"},{step:"transit",date:"16 jan",note:"Vol AF722"}]},
+  {id:"BDR-2025-0038",date:"2025-01-08",status:"delivered",customer:"Aïssatou Bah",email:"aissatou@mail.com",phone:"514-555-0202",address:"1200 Av. Papineau, Mtl",items:[{pid:7,qty:2,name:"Mini Boubou Enfant",price:64},{pid:15,qty:3,name:"Huile de Karité Pure",price:34}],total:252.80,shipping:15,payMethod:"Carte",events:[{step:"confirmed",date:"8 jan"},{step:"delivered",date:"21 jan"}]},
+  {id:"BDR-2025-0051",date:"2025-01-15",status:"preparation",customer:"Jean-Pierre Tremblay",email:"jp@mail.com",phone:"438-555-0303",address:"780 Bd René-Lévesque, Mtl",items:[{pid:10,qty:1,name:"Masque Baoulé Ancien",price:320}],total:362.40,shipping:22,payMethod:"PayPal",events:[{step:"confirmed",date:"15 jan"},{step:"preparation",date:"16 jan"}]},
+  {id:"BDR-2025-0055",date:"2025-01-18",status:"confirmed",customer:"Fatou Sow",email:"fatou@mail.com",phone:"514-555-0404",address:"320 Rue Ontario E, Mtl",items:[{pid:6,qty:1,name:"Kaftan Soirée Brodé",price:212},{pid:13,qty:2,name:"Collier Krobo Perles",price:86}],total:425.90,shipping:18,payMethod:"Interac",events:[{step:"confirmed",date:"18 jan"}]},
+  {id:"BDR-2025-0060",date:"2025-01-22",status:"shipped",customer:"Omar Sy",email:"omar@mail.com",phone:"438-555-0505",address:"55 Av. du Parc, Mtl",items:[{pid:3,qty:1,name:"Agbada Cérémonie",price:245},{pid:16,qty:2,name:"Tissu Wax 6 yards",price:58}],total:392.15,shipping:18,payMethod:"Carte",events:[{step:"confirmed",date:"22 jan"},{step:"preparation",date:"23 jan"},{step:"shipped",date:"27 jan"}]},
 ];
 
 const ARTISANS = [
-  { name:"Moussa Diallo", craft:"Tailleur brodeur", city:"Dakar", country:"Sénégal", exp:23, bio:"Formé par son père, Moussa perpétue l'art du grand boubou." },
-  { name:"Fatoumata Koné", craft:"Artisane bogolan", city:"Bamako", country:"Mali", exp:18, bio:"Ressuscite les motifs anciens du bogolan peint à la boue." },
-  { name:"Abena Asante", craft:"Perlière Krobo", city:"Accra", country:"Ghana", exp:15, bio:"Dirige une coopérative de 12 femmes artisanes." },
-  { name:"Cheikh Ndiaye", craft:"Sculpteur sur bois", city:"Thiès", country:"Sénégal", exp:30, bio:"Maître sculpteur, pièces uniques en bois de venn." },
-  { name:"Kweku Mensah", craft:"Tisserand kente", city:"Kumasi", country:"Ghana", exp:25, bio:"Gardien de la tradition kente du peuple Ashanti." },
-  { name:"Aïcha Diop", craft:"Couturière haute couture", city:"Dakar", country:"Sénégal", exp:20, bio:"Allie couture traditionnelle et tendances contemporaines." },
-  { name:"Koffi Mensah", craft:"Tisserand / Tailleur", city:"Lomé", country:"Togo", exp:12, bio:"Spécialiste wax et couture enfant." },
-  { name:"Mariam Ouédraogo", craft:"Productrice karité", city:"Ouaga", country:"Burkina Faso", exp:10, bio:"Coopérative de femmes, karité 100% bio." },
+  {id:1,name:"Moussa Diallo",craft:"Tailleur brodeur",city:"Dakar",country:"Sénégal",exp:23,products:3,sales:102,revenue:15870,rating:4.8},
+  {id:2,name:"Fatoumata Koné",craft:"Artisane bogolan",city:"Bamako",country:"Mali",exp:18,products:2,sales:53,revenue:9240,rating:4.8},
+  {id:3,name:"Abena Asante",craft:"Perlière Krobo",city:"Accra",country:"Ghana",exp:15,products:1,sales:38,revenue:3268,rating:4.6},
+  {id:4,name:"Cheikh Ndiaye",craft:"Sculpteur",city:"Thiès",country:"Sénégal",exp:30,products:2,sales:20,revenue:11900,rating:4.95},
+  {id:5,name:"Koffi Mensah",craft:"Tisserand",city:"Lomé",country:"Togo",exp:12,products:2,sales:113,revenue:6410,rating:4.55},
+  {id:6,name:"Aïcha Diop",craft:"Couturière HC",city:"Dakar",country:"Sénégal",exp:20,products:1,sales:21,revenue:4452,rating:4.9},
+  {id:7,name:"Kweku Mensah",craft:"Tisserand kente",city:"Kumasi",country:"Ghana",exp:25,products:1,sales:26,revenue:2314,rating:4.7},
+  {id:8,name:"Mariam Ouédraogo",craft:"Productrice karité",city:"Ouaga",country:"Burkina Faso",exp:10,products:1,sales:89,revenue:3026,rating:4.4},
 ];
 
-const TRACKING_STEPS = [
-  { key:"confirmed", label:"Commande confirmée", icon:"✅", desc:"Reçue et validée" },
-  { key:"preparation", label:"En préparation", icon:"🧵", desc:"L'artisan prépare" },
-  { key:"shipped", label:"Expédiée", icon:"📦", desc:"Colis parti" },
-  { key:"transit", label:"En transit", icon:"✈️", desc:"Vol Afrique → Canada" },
-  { key:"customs", label:"Dédouanement", icon:"🛃", desc:"Douanes canadiennes" },
-  { key:"delivery", label:"En livraison", icon:"🚚", desc:"En route chez vous" },
-  { key:"delivered", label:"Livré !", icon:"🎉", desc:"Colis livré" },
-];
+const CATS=[{key:"homme",label:"Homme",emoji:"👘",color:"#1A3A6B"},{key:"femme",label:"Femme",emoji:"👗",color:"#8B1A00"},{key:"enfant",label:"Enfant",emoji:"🧒",color:"#27AE60"},{key:"art",label:"Art",emoji:"🏺",color:"#6A0572"},{key:"divers",label:"Divers",emoji:"✨",color:"#D4AF37"}];
+const MONTHLY=[{month:"Août",revenue:2800,orders:12},{month:"Sept",revenue:4200,orders:18},{month:"Oct",revenue:5100,orders:22},{month:"Nov",revenue:7800,orders:34},{month:"Déc",revenue:12400,orders:52},{month:"Jan",revenue:9600,orders:41}];
+const STEPS=[{key:"confirmed",label:"Confirmée",icon:"✅"},{key:"preparation",label:"Préparation",icon:"🧵"},{key:"shipped",label:"Expédiée",icon:"📦"},{key:"transit",label:"En transit",icon:"✈️"},{key:"customs",label:"Dédouanement",icon:"🛃"},{key:"delivery",label:"En livraison",icon:"🚚"},{key:"delivered",label:"Livré",icon:"🎉"}];
+const sLabel={confirmed:"Confirmée",preparation:"Préparation",shipped:"Expédiée",transit:"En transit",customs:"Dédouanement",delivery:"En livraison",delivered:"Livré"};
+const sColor={confirmed:A.success,preparation:"#CD853F",shipped:"#1A5276",transit:"#6A0572",customs:"#B7950B",delivery:"#1A5276",delivered:A.success};
+const fmt=v=>Number(v).toFixed(2);
 
-const tagColors = { Bestseller:G, Nouveau:GREEN, Artisanal:"#8B4513", Populaire:"#C0392B", Unique:"#6A0572", Bio:"#228B22", Premium:"#1A3A6B" };
-const statusColors = { confirmed:GREEN, preparation:"#8B4513", shipped:"#1A5276", transit:"#6A0572", customs:"#B7950B", delivery:"#1A5276", delivered:GREEN };
-const statusLabels = { confirmed:"Confirmée", preparation:"Préparation", shipped:"Expédiée", transit:"En transit ✈️", customs:"Dédouanement", delivery:"En livraison", delivered:"Livré ✓" };
+function useScreen(){const[w,setW]=useState(typeof window!=="undefined"?window.innerWidth:1200);useEffect(()=>{const h=()=>setW(window.innerWidth);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);return{w,mobile:w<768,tablet:w>=768&&w<1024,desktop:w>=1024};}
 
-const DEMO_ORDERS = [
-  { id:"BDR-2025-0042", date:"10 jan 2025", status:"transit", client:"Mamadou Diallo", total:355.25, events:[{step:"confirmed",date:"10 jan"},{step:"preparation",date:"11 jan"},{step:"shipped",date:"15 jan"},{step:"transit",date:"16 jan",note:"Vol AF722"}] },
-  { id:"BDR-2025-0038", date:"8 jan 2025", status:"delivered", client:"Aïssatou Bah", total:252.80, events:[{step:"confirmed",date:"8 jan"},{step:"delivered",date:"21 jan"}] },
-];
-
-const fmt = v => Number(v).toFixed(2);
-
-function CatIcon({ category, size=50 }) {
-  const s = size;
-  const icons = {
-    homme:<svg width={s} height={s} viewBox="0 0 50 50"><rect x="10" y="7" width="30" height="38" rx="4" fill="#1A3A6B"/><ellipse cx="25" cy="10" rx="10" ry="5" fill="#0D2550"/><ellipse cx="25" cy="10" rx="8" ry="4" fill="none" stroke={G} strokeWidth="1.5"/><line x1="25" y1="15" x2="25" y2="38" stroke={G} strokeWidth="1.2" strokeDasharray="4,3"/><rect x="10" y="42" width="30" height="3" rx="1" fill={G} opacity=".7"/></svg>,
-    femme:<svg width={s} height={s} viewBox="0 0 50 50"><path d="M14,10 Q12,14 9,24 L7,42 Q7,46 14,46 L36,46 Q43,46 43,42 L41,24 Q38,14 36,10 Z" fill="#E74C3C"/><rect x="8" y="22" width="34" height="4" fill="#F1C40F" opacity=".7"/><rect x="7" y="32" width="36" height="4" fill="#27AE60" opacity=".7"/></svg>,
-    enfant:<svg width={s} height={s} viewBox="0 0 50 50"><rect x="12" y="10" width="26" height="32" rx="4" fill="#27AE60"/><ellipse cx="25" cy="12" rx="8" ry="4" fill="#1E8449"/><line x1="25" y1="16" x2="25" y2="34" stroke={G} strokeWidth="1.2" strokeDasharray="3,2"/><circle cx="25" cy="35" r="4" fill="#F1C40F" opacity=".7"/></svg>,
-    art:<svg width={s} height={s} viewBox="0 0 50 50"><ellipse cx="25" cy="15" rx="12" ry="14" fill="#6B2800"/><rect x="21" y="29" width="8" height="16" rx="2" fill="#8B4513"/><circle cx="21" cy="11" r="3" fill={DARK}/><circle cx="29" cy="11" r="3" fill={DARK}/><path d="M19,19 Q25,24 31,19" fill="none" stroke={DARK} strokeWidth="2"/></svg>,
-    divers:<svg width={s} height={s} viewBox="0 0 50 50"><circle cx="25" cy="16" r="12" fill={G}/><circle cx="25" cy="16" r="7" fill="#FFE878"/><path d="M14,30 Q14,26 25,24 Q36,26 36,30 L38,44 Q38,47 35,47 L15,47 Q12,47 12,44 Z" fill="#8B5E3C"/></svg>,
-  };
-  return icons[category]||icons.divers;
+// ─── STORAGE HELPERS (shared=true to sync with public store) ───
+async function loadData(key, fallback) {
+  try {
+    const r = await window.storage.get("badaour:" + key, true);
+    return r ? JSON.parse(r.value) : fallback;
+  } catch { return fallback; }
+}
+async function saveData(key, value) {
+  try { await window.storage.set("badaour:" + key, JSON.stringify(value), true); } catch(e) { console.warn("Storage:", e); }
 }
 
-export default function BADAOURPublic() {
-  const scr = useScreen();
-  const { mobile, tablet } = scr;
-  const [page, setPage] = useState("home");
-  const [activeCat, setActiveCat] = useState(null);
-  const [search, setSearch] = useState("");
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [notif, setNotif] = useState(null);
-  const [payStep, setPayStep] = useState("cart");
-  const [payMethod, setPayMethod] = useState("card");
-  const [form, setForm] = useState({name:"",email:"",phone:"",address:"",city:"Montréal",province:"QC",postal:""});
-  const [cardD, setCardD] = useState({number:"",name:"",expiry:"",cvv:""});
-  const [trackId, setTrackId] = useState("");
-  const [trackResult, setTrackResult] = useState(null);
-  const [trackErr, setTrackErr] = useState("");
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authMode, setAuthMode] = useState("login");
-  const [authForm, setAuthForm] = useState({firstName:"",lastName:"",email:"",password:"",confirm:""});
-  const [accounts, setAccounts] = useState([{firstName:"Client",lastName:"Demo",email:"demo@badaour.com",password:"demo123",orders:[]}]);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [mSearch, setMSearch] = useState(false);
+export default function BADAOURAdmin(){
+  const scr=useScreen();const{mobile,tablet}=scr;
+  const[logged,setLogged]=useState(false);
+  const[loginEmail,setLoginEmail]=useState("");
+  const[loginPass,setLoginPass]=useState("");
+  const[loginErr,setLoginErr]=useState("");
+  const[notif,setNotif]=useState(null);
 
-  const toast = (msg,type="success") => { setNotif({msg,type}); setTimeout(()=>setNotif(null),2800); };
-  const addToCart = p => { setCart(c=>{const ex=c.find(i=>i.id===p.id);return ex?c.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...c,{...p,qty:1}];}); toast(`${p.name} ajouté`); };
-  const updateQty = (id,d) => setCart(c=>c.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i));
-  const removeItem = id => setCart(c=>c.filter(i=>i.id!==id));
-  const toggleWish = id => setWishlist(w=>w.includes(id)?w.filter(i=>i!==id):[...w,id]);
-  const goPage = p => { setPage(p); setMenuOpen(false); setMSearch(false); window.scrollTo(0,0); };
+  const toast=(msg,type="success")=>{setNotif({msg,type});setTimeout(()=>setNotif(null),3000);};
+  const handleLogin=()=>{if(loginEmail===ADMIN_EMAIL&&loginPass===ADMIN_PASSWORD){setLogged(true);setLoginErr("");}else{setLoginErr("Identifiants incorrects.");}};
 
-  const cartQty = cart.reduce((s,i)=>s+i.qty,0);
-  const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const shipping = cart.length?(subtotal>200?0:18):0;
-  const taxes = +((subtotal+shipping)*0.14975).toFixed(2);
-  const total = +(subtotal+shipping+taxes).toFixed(2);
+  if(!logged){return(
+    <div style={{fontFamily:"'Georgia',serif",background:A.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <style>{`*{box-sizing:border-box;margin:0;padding:0;}input:focus{outline:none;border-color:${A.accent}!important;}@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}`}</style>
+      <div style={{width:"100%",maxWidth:420,animation:"fadeUp .5s ease"}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{fontSize:mobile?30:40,fontWeight:"bold",color:A.accent,letterSpacing:8}}>BADAOUR</div>
+          <div style={{fontSize:11,color:A.textMuted,letterSpacing:4,marginTop:4}}>ESPACE ADMINISTRATION</div>
+          <div style={{width:60,height:2,background:A.accent,margin:"14px auto 0"}} />
+        </div>
+        <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:12,padding:mobile?"28px 22px":"40px 36px"}}>
+          <div style={{textAlign:"center",marginBottom:24}}>
+            <div style={{width:64,height:64,borderRadius:"50%",background:A.accentGlow,border:`2px solid ${A.accent}44`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:28}}>🔒</div>
+            <div style={{fontSize:18,color:A.text,fontWeight:"bold"}}>Connexion Admin</div>
+            <div style={{fontSize:12,color:A.textMuted,marginTop:4}}>Accès réservé au promoteur</div>
+          </div>
+          {loginErr&&<div style={{background:A.dangerBg,border:`1px solid ${A.danger}44`,borderRadius:8,padding:"12px 16px",color:A.danger,fontSize:13,marginBottom:16,textAlign:"center"}}>⚠️ {loginErr}</div>}
+          <div style={{marginBottom:16}}><label style={{display:"block",fontSize:10,letterSpacing:2,color:A.textMuted,textTransform:"uppercase",marginBottom:6}}>Email</label><input type="email" placeholder="admin@badaour.com" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} style={{width:"100%",padding:"14px 16px",background:A.bg,border:`1px solid ${A.border}`,borderRadius:8,color:A.text,fontSize:14,fontFamily:"Georgia"}} /></div>
+          <div style={{marginBottom:24}}><label style={{display:"block",fontSize:10,letterSpacing:2,color:A.textMuted,textTransform:"uppercase",marginBottom:6}}>Mot de passe</label><input type="password" placeholder="••••••••" value={loginPass} onChange={e=>setLoginPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} style={{width:"100%",padding:"14px 16px",background:A.bg,border:`1px solid ${A.border}`,borderRadius:8,color:A.text,fontSize:14,fontFamily:"Georgia"}} /></div>
+          <button onClick={handleLogin} style={{width:"100%",background:`linear-gradient(135deg,${A.accent},${A.accentDim})`,color:DARK,border:"none",padding:"16px",borderRadius:8,fontSize:15,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,cursor:"pointer",textTransform:"uppercase"}}>Se connecter</button>
+          <div style={{textAlign:"center",marginTop:16,fontSize:11,color:A.textMuted}}>🔐 Connexion sécurisée · Données persistantes</div>
+        </div>
+        <div style={{textAlign:"center",marginTop:18,fontSize:11,color:A.textMuted}}>Identifiants : <span style={{color:A.accent}}>admin@badaour.com</span> / <span style={{color:A.accent}}>badaour2025</span></div>
+      </div>
+    </div>
+  );}
+  return <AdminDashboard toast={toast} notif={notif} onLogout={()=>{setLogged(false);setLoginEmail("");setLoginPass("");}} scr={scr} />;
+}
 
-  const filtered = PRODUCTS.filter(p=>{
-    const mc = activeCat?p.category===activeCat:true;
-    const q = search.toLowerCase();
-    const mq = !q||p.name.toLowerCase().includes(q)||p.artisan.toLowerCase().includes(q)||p.country.toLowerCase().includes(q);
-    return mc&&mq;
-  });
+function AdminDashboard({toast,notif,onLogout,scr}){
+  const{mobile,tablet}=scr;
+  const[loading,setLoading]=useState(true);
+  const[page,setPage]=useState("dashboard");
+  const[products,setProducts]=useState(DEFAULT_PRODUCTS);
+  const[orders,setOrders]=useState(DEFAULT_ORDERS);
+  const[selectedOrder,setSelectedOrder]=useState(null);
+  const[orderFilter,setOrderFilter]=useState("all");
+  const[showNewProd,setShowNewProd]=useState(false);
+  const[newProd,setNewProd]=useState({name:"",category:"homme",sub:"",artisan:"",city:"",country:"Sénégal",price:0,cost:0,stock:0,tag:"Nouveau",desc:""});
+  const[sideOpen,setSideOpen]=useState(false);
+  const[editingProduct,setEditingProduct]=useState(null);
 
-  const doTrack = () => {
-    if(!trackId.trim()){setTrackErr("Entrez un numéro");return;}
-    const o = DEMO_ORDERS.find(o=>o.id===trackId.trim());
-    if(o){setTrackResult(o);setTrackErr("");}else{setTrackResult(null);setTrackErr("Introuvable (ex: BDR-2025-0042)");}
+  // ─── LOAD FROM PERSISTENT STORAGE ───
+  useEffect(()=>{
+    (async()=>{
+      const p = await loadData("products", null);
+      const o = await loadData("orders", null);
+      if(p && p.length > 0) setProducts(p);
+      else { await saveData("products", DEFAULT_PRODUCTS); }
+      if(o && o.length > 0) setOrders(o);
+      else { await saveData("orders", DEFAULT_ORDERS); }
+      setLoading(false);
+    })();
+  },[]);
+
+  // ─── SAVE ON CHANGE ───
+  const updateProducts = async (newProducts) => { setProducts(newProducts); await saveData("products", newProducts); };
+  const updateOrders = async (newOrders) => { setOrders(newOrders); await saveData("orders", newOrders); };
+
+  const totalRev=orders.reduce((s,o)=>s+o.total,0);
+  const totalOrd=orders.length;
+  const avgOrd=totalOrd?totalRev/totalOrd:0;
+  const pendOrd=orders.filter(o=>o.status!=="delivered").length;
+  const lowStock=products.filter(p=>p.stock<5).length;
+  const totalProfit=products.reduce((s,p)=>s+(p.price-(p.cost||0))*(p.sales||0),0);
+  const filtOrd=orderFilter==="all"?orders:orders.filter(o=>o.status===orderFilter);
+
+  const updateStatus=async(oid,ns)=>{
+    const updated=orders.map(o=>o.id===oid?{...o,status:ns,events:[...(o.events||[]),{step:ns,date:new Date().toLocaleDateString("fr-CA",{day:"numeric",month:"short"}),note:"Mis à jour"}]}:o);
+    await updateOrders(updated);
+    toast(`${oid} → ${sLabel[ns]}`);
   };
 
-  const handleLogin = () => {
-    const u=accounts.find(a=>a.email===authForm.email&&a.password===authForm.password);
-    if(u){setCurrentUser(u);goPage("compte");toast(`Bienvenue ${u.firstName} !`);}else toast("Identifiants incorrects","info");
-  };
-  const handleRegister = () => {
-    if(!authForm.firstName||!authForm.email||!authForm.password){toast("Champs requis","info");return;}
-    if(authForm.password!==authForm.confirm){toast("Mots de passe différents","info");return;}
-    if(accounts.find(a=>a.email===authForm.email)){toast("Email existant","info");return;}
-    const u={...authForm,orders:[]};setAccounts(a=>[...a,u]);setCurrentUser(u);goPage("compte");toast(`Bienvenue ${u.firstName} !`);
-  };
-  const confirmOrder = () => {
-    if(!form.name||!form.email||!form.address){toast("Champs * requis","info");return;}
-    const oid="BDR-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*9000)+1000);
-    toast(`Commande ${oid} confirmée ! 🎉`);
-    if(currentUser){const no={id:oid,date:new Date().toLocaleDateString("fr-CA"),status:"confirmed",items:cart.map(i=>({pid:i.id,qty:i.qty})),total};setAccounts(a=>a.map(u=>u.email===currentUser.email?{...u,orders:[...u.orders,no]}:u));setCurrentUser(prev=>({...prev,orders:[...(prev.orders||[]),no]}));}
-    setCart([]);setPayStep("cart");goPage("home");
+  const addProduct=async()=>{
+    if(!newProd.name||!newProd.price){toast("Nom et prix requis","error");return;}
+    const updated=[...products,{...newProd,id:Math.max(...products.map(p=>p.id))+1,price:+newProd.price,cost:+newProd.cost,stock:+newProd.stock,sales:0,rating:0,color:"#8B5E3C"}];
+    await updateProducts(updated);
+    setNewProd({name:"",category:"homme",sub:"",artisan:"",city:"",country:"Sénégal",price:0,cost:0,stock:0,tag:"Nouveau",desc:""});
+    setShowNewProd(false);
+    toast("Produit ajouté et sauvegardé ✓");
   };
 
-  const navItems = [{k:"home",l:"Accueil"},{k:"boutique",l:"Boutique"},{k:"artisans",l:"Artisans"},{k:"suivi",l:"Suivi"},{k:"commande",l:"Sur mesure"}];
-  const px = mobile?"14px":tablet?"20px":"24px";
-  const gc = (d,t,m) => mobile?m:tablet?t:d;
+  const deleteProduct=async(id)=>{
+    const updated=products.filter(p=>p.id!==id);
+    await updateProducts(updated);
+    toast("Produit supprimé ✓");
+  };
 
-  const FInp = ({label,...props}) => (<div style={{marginBottom:14}}>{label&&<label style={{display:"block",fontSize:9,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:4,fontFamily:"Georgia"}}>{label}</label>}<input {...props} style={{width:"100%",padding:"10px 12px",background:BG,border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",borderRadius:4,...(props.style||{})}} /></div>);
+  const deleteOrder=async(id)=>{
+    const updated=orders.filter(o=>o.id!==id);
+    await updateOrders(updated);
+    setSelectedOrder(null);
+    toast("Commande supprimée ✓");
+  };
 
-  return (
-    <div style={{fontFamily:"'Georgia','Times New Roman',serif",background:BG,minHeight:"100vh",color:DARK,overflowX:"hidden"}}>
+  const resetData=async()=>{
+    await saveData("products", DEFAULT_PRODUCTS);
+    await saveData("orders", DEFAULT_ORDERS);
+    setProducts(DEFAULT_PRODUCTS);
+    setOrders(DEFAULT_ORDERS);
+    toast("Données réinitialisées ✓");
+  };
+
+  const goPage=p=>{setPage(p);setSelectedOrder(null);setSideOpen(false);};
+  const gc=(d,t,m)=>mobile?m:tablet?t:d;
+
+  const sideItems=[{k:"dashboard",l:"Tableau de bord",icon:"📊"},{k:"orders",l:"Commandes",icon:"📦",badge:pendOrd},{k:"products",l:"Produits",icon:"🏷️",badge:lowStock||null},{k:"artisans",l:"Artisans",icon:"✂️"},{k:"customers",l:"Clients",icon:"👥"},{k:"analytics",l:"Analytiques",icon:"📈"},{k:"settings",l:"Paramètres",icon:"⚙️"}];
+
+  const Inp=({label,value,onChange,type="text",placeholder="",...rest})=>(<div style={{marginBottom:12}}><label style={{display:"block",fontSize:9,letterSpacing:2,color:A.textMuted,textTransform:"uppercase",marginBottom:4}}>{label}</label><input type={type} placeholder={placeholder} value={value} onChange={onChange} style={{width:"100%",padding:"10px 12px",background:A.bg,border:`1px solid ${A.border}`,borderRadius:6,color:A.text,fontSize:12,fontFamily:"Georgia"}} {...rest} /></div>);
+
+  if(loading) return (
+    <div style={{fontFamily:"Georgia",background:A.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:14}}>
+      <div style={{fontSize:28,fontWeight:"bold",color:A.accent,letterSpacing:6}}>BADAOUR ADMIN</div>
+      <div style={{fontSize:12,color:A.textMuted}}>Chargement des données...</div>
+      <div style={{width:36,height:36,border:`3px solid ${A.border}`,borderTopColor:A.accent,borderRadius:"50%",animation:"spin 1s linear infinite"}} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+  return(
+    <div style={{fontFamily:"'Georgia',serif",display:"flex",minHeight:"100vh",background:A.bg,color:A.text}}>
       <style>{`
-        @keyframes fadeSlide{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes slideDown{from{opacity:0;max-height:0}to{opacity:1;max-height:400px}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeSlide{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
         *{box-sizing:border-box;margin:0;padding:0;}
-        input:focus,textarea:focus,select:focus{border-color:${G}!important;outline:none;}
-        .hcard{transition:transform .2s,box-shadow .2s;} .hcard:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(26,10,0,.12);}
-        button{transition:opacity .15s,background .2s;cursor:pointer;}
-        button:active:not(:disabled){transform:scale(.97);}
-        .cpill:hover{background:${DARK}!important;color:${G}!important;}
-        body{overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+        input:focus,textarea:focus,select:focus{outline:none;border-color:${A.accent}!important;}
+        button{cursor:pointer;transition:opacity .15s,background .2s,transform .1s;} button:active:not(:disabled){transform:scale(.97);}
+        .arow{transition:background .15s;} .arow:hover{background:${A.surface2}!important;}
+        ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
+        body{overflow-x:hidden;}
       `}</style>
 
-      {notif&&<div style={{position:"fixed",top:12,left:mobile?12:"auto",right:12,zIndex:99999,background:notif.type==="info"?"#1A5276":GREEN,color:CREAM,padding:"12px 18px",borderRadius:6,fontSize:13,boxShadow:"0 6px 28px rgba(0,0,0,.3)",animation:"fadeSlide .3s ease"}}>{notif.msg}</div>}
+      {notif&&<div style={{position:"fixed",top:14,left:mobile?14:"auto",right:14,zIndex:99999,background:notif.type==="error"?A.danger:A.success,color:"white",padding:"14px 20px",borderRadius:8,fontSize:13,fontFamily:"Georgia",boxShadow:"0 8px 32px rgba(0,0,0,.4)",animation:"fadeSlide .3s ease",maxWidth:400}}>{notif.msg}</div>}
 
-      {/* HEADER */}
-      <header style={{background:DARK,borderBottom:`3px solid ${G}`,position:"sticky",top:0,zIndex:100}}>
-        {!mobile&&<div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+px}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #3A1F00",padding:"4px 0",fontSize:9,color:G,letterSpacing:1,flexWrap:"wrap",gap:4}}><span>🌍 Livraison Afrique → Canada · 14–21 jours</span>{!tablet&&<span>Commerce éthique · Artisanat authentique</span>}<span>📞 {PHONE}</span></div></div>}
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+px}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:mobile?"10px 0":"12px 0",gap:8}}>
-            <div onClick={()=>goPage("home")} style={{cursor:"pointer",flexShrink:0}}>
-              <div style={{fontSize:mobile?20:26,fontWeight:"bold",color:G,letterSpacing:mobile?3:6}}>BADAOUR</div>
-              {!mobile&&<div style={{fontSize:8,color:"#A0845C",letterSpacing:3,marginTop:-2}}>L'AFRIQUE À VOTRE PORTE</div>}
-            </div>
-            {!mobile&&<div style={{flex:1,maxWidth:tablet?200:300,margin:"0 12px",position:"relative"}}><input value={search} onChange={e=>{setSearch(e.target.value);if(e.target.value){goPage("boutique");setActiveCat(null);}}} placeholder="Rechercher..." style={{width:"100%",padding:"8px 12px 8px 30px",background:"#2A1000",border:`1px solid ${G}33`,borderRadius:4,color:CREAM,fontSize:12,fontFamily:"Georgia"}} /><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:12,opacity:.6}}>🔍</span></div>}
-            {!mobile&&!tablet&&<nav style={{display:"flex",gap:4,alignItems:"center"}}>{navItems.map(({k,l})=>(<button key={k} onClick={()=>goPage(k)} style={{background:"none",border:"none",color:page===k?G:"#A0845C",fontSize:11,letterSpacing:1,fontFamily:"Georgia",borderBottom:page===k?`2px solid ${G}`:"2px solid transparent",padding:"4px 6px"}}>{l}</button>))}</nav>}
-            <div style={{display:"flex",alignItems:"center",gap:mobile?6:8,flexShrink:0}}>
-              {mobile&&<button onClick={()=>setMSearch(!mSearch)} style={{background:"none",border:"none",color:G,fontSize:18,padding:4}}>🔍</button>}
-              <button onClick={()=>goPage(currentUser?"compte":"auth")} style={{background:"none",border:"1px solid #3A1F00",borderRadius:4,padding:mobile?"5px 8px":"5px 12px",color:currentUser?G:"#A0845C",fontFamily:"Georgia",fontSize:11}}>{currentUser?(mobile?"👤":`👤 ${currentUser.firstName}`):(mobile?"👤":"👤 Connexion")}</button>
-              <button onClick={()=>{setPayStep("cart");goPage("panier");}} style={{background:G,border:"none",borderRadius:4,padding:mobile?"6px 10px":"6px 14px",color:DARK,fontFamily:"Georgia",fontSize:12,fontWeight:"bold",position:"relative"}}>🛒{!mobile&&" Panier"}{cartQty>0&&<span style={{position:"absolute",top:-6,right:-6,background:"#C0392B",color:"white",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:"bold"}}>{cartQty}</span>}</button>
-              {(mobile||tablet)&&<button onClick={()=>setMenuOpen(!menuOpen)} style={{background:"none",border:"1px solid #3A1F00",borderRadius:4,padding:"5px 8px",color:G,fontSize:18}}>{menuOpen?"✕":"☰"}</button>}
-            </div>
-          </div>
-          {mobile&&mSearch&&<div style={{padding:"0 0 10px"}}><input value={search} onChange={e=>{setSearch(e.target.value);if(e.target.value){goPage("boutique");setActiveCat(null);}}} placeholder="Rechercher..." autoFocus style={{width:"100%",padding:"10px 12px",background:"#2A1000",border:`1px solid ${G}33`,borderRadius:4,color:CREAM,fontSize:14,fontFamily:"Georgia"}} /></div>}
+      {mobile&&sideOpen&&<div onClick={()=>setSideOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:200}} />}
+
+      {/* ═══ SIDEBAR ═══ */}
+      <aside style={{width:mobile?260:230,background:A.surface,borderRight:`1px solid ${A.border}`,flexShrink:0,position:mobile?"fixed":"sticky",top:0,left:mobile?(sideOpen?0:-280):0,height:"100vh",overflowY:"auto",display:"flex",flexDirection:"column",zIndex:mobile?250:10,transition:mobile?"left .3s ease":"none"}}>
+        <div style={{padding:"18px 18px 14px",borderBottom:`1px solid ${A.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><div style={{fontSize:20,fontWeight:"bold",color:A.accent,letterSpacing:5}}>BADAOUR</div><div style={{fontSize:9,color:A.textMuted,letterSpacing:2,marginTop:3}}>ADMINISTRATION</div></div>
+          {mobile&&<button onClick={()=>setSideOpen(false)} style={{background:"none",border:"none",color:A.textMuted,fontSize:20}}>✕</button>}
         </div>
-        {(mobile||tablet)&&menuOpen&&<div style={{background:"#1A0800",borderTop:`1px solid ${G}33`,padding:"8px "+px,overflow:"hidden"}}>{navItems.map(({k,l})=>(<button key={k} onClick={()=>goPage(k)} style={{display:"block",width:"100%",textAlign:"left",background:page===k?"#2A1000":"transparent",border:"none",color:page===k?G:"#A0845C",fontSize:14,fontFamily:"Georgia",padding:"11px 14px",borderLeft:page===k?`3px solid ${G}`:"3px solid transparent",marginBottom:2,borderRadius:2}}>{l}</button>))}{mobile&&<div style={{padding:"10px 14px 4px",fontSize:10,color:"#A0845C",borderTop:"1px solid #3A1F00",marginTop:6}}>📞 {PHONE} · ✉️ {EMAIL}</div>}</div>}
-      </header>
 
-      <div style={{maxWidth:1200,margin:"0 auto"}}>
+        {/* Sync status */}
+        <div style={{padding:"10px 18px",borderBottom:`1px solid ${A.border}`,background:A.successBg}}>
+          <div style={{fontSize:10,color:A.success,fontWeight:"bold",display:"flex",alignItems:"center",gap:6}}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:A.success,display:"inline-block"}} />
+            Données synchronisées
+          </div>
+          <div style={{fontSize:9,color:A.textMuted,marginTop:2}}>Partagées avec la boutique publique</div>
+        </div>
 
-        {/* HOME */}
-        {page==="home"&&(<>
-          <div style={{background:`linear-gradient(135deg,${DARK},${BROWN},${DARK})`,padding:mobile?"40px 16px":tablet?"52px 20px":"72px 24px",borderBottom:`4px solid ${G}`,position:"relative",overflow:"hidden"}}>
-            <div style={{maxWidth:560,position:"relative",animation:"fadeUp .6s ease"}}>
-              <div style={{fontSize:9,letterSpacing:mobile?3:5,color:G,marginBottom:14,borderLeft:`3px solid ${G}`,paddingLeft:12}}>ARTISANAT AFRICAIN · MONTRÉAL</div>
-              <h1 style={{fontSize:mobile?28:tablet?40:50,fontWeight:"bold",color:CREAM,lineHeight:1.1,marginBottom:16}}>L'âme de l'Afrique,<br/><span style={{color:G}}>livrée chez vous.</span></h1>
-              <p style={{fontSize:mobile?13:15,color:"#C4945C",lineHeight:1.8,maxWidth:440,marginBottom:24}}>Habillement traditionnel, oeuvres d'art et produits africains authentiques.</p>
-              <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                <button onClick={()=>goPage("boutique")} style={{background:G,color:DARK,border:"none",padding:mobile?"12px 20px":"14px 28px",fontSize:mobile?12:13,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,textTransform:"uppercase",borderRadius:4}}>Découvrir</button>
-                <button onClick={()=>goPage("suivi")} style={{background:"transparent",color:G,border:`2px solid ${G}`,padding:mobile?"12px 16px":"14px 26px",fontSize:mobile?12:13,fontFamily:"Georgia",letterSpacing:2,textTransform:"uppercase",borderRadius:4}}>Suivi commande</button>
+        <nav style={{padding:"12px 10px",flex:1}}>
+          {sideItems.map(item=>(<button key={item.k} onClick={()=>goPage(item.k)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"11px 14px",marginBottom:3,background:page===item.k?A.surface2:"transparent",border:page===item.k?`1px solid ${A.border}`:"1px solid transparent",borderRadius:8,color:page===item.k?A.accent:A.textDim,fontFamily:"Georgia",fontSize:13,textAlign:"left"}}><span style={{fontSize:15}}>{item.icon}</span><span style={{flex:1}}>{item.l}</span>{item.badge>0&&<span style={{background:A.danger,color:"white",borderRadius:10,padding:"2px 7px",fontSize:9,fontWeight:"bold"}}>{item.badge}</span>}</button>))}
+        </nav>
+        <div style={{padding:"16px 18px",borderTop:`1px solid ${A.border}`}}>
+          <div style={{fontSize:11,color:A.textDim}}>👤 Promoteur</div>
+          <div style={{fontSize:10,color:A.accent,marginTop:3}}>{ADMIN_EMAIL}</div>
+          <button onClick={onLogout} style={{marginTop:12,width:"100%",background:A.dangerBg,border:`1px solid ${A.danger}33`,borderRadius:6,padding:"8px",color:A.danger,fontFamily:"Georgia",fontSize:11}}>🚪 Déconnexion</button>
+        </div>
+      </aside>
+
+      {/* ═══ MAIN ═══ */}
+      <main style={{flex:1,padding:mobile?"16px":tablet?"20px":"24px 28px",overflowY:"auto",maxHeight:"100vh",minWidth:0}}>
+        {mobile&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,padding:"6px 0"}}><button onClick={()=>setSideOpen(true)} style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:8,padding:"10px 14px",color:A.accent,fontSize:18}}>☰</button><div style={{fontSize:16,fontWeight:"bold",color:A.accent,letterSpacing:4}}>BADAOUR</div><div style={{width:40}} /></div>}
+
+        {/* ═══ DASHBOARD ═══ */}
+        {page==="dashboard"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:5}}>Tableau de bord</h1>
+          <p style={{fontSize:12,color:A.textMuted,marginBottom:18}}>Vue d'ensemble · Données en temps réel</p>
+
+          <div style={{display:"grid",gridTemplateColumns:gc("repeat(4,1fr)","repeat(2,1fr)","repeat(2,1fr)"),gap:12,marginBottom:18}}>
+            {[{l:"Chiffre d'affaires",v:`${fmt(totalRev)} $`,icon:"💰",c:A.accent,sub:`+${fmt(totalProfit)}$ profit`},{l:"Commandes",v:totalOrd,icon:"📦",c:A.info,sub:`${pendOrd} en cours`},{l:"Panier moyen",v:`${fmt(avgOrd)} $`,icon:"🛒",c:A.success,sub:`${products.reduce((s,p)=>s+(p.sales||0),0)} articles vendus`},{l:"Produits",v:products.length,icon:"🏷️",c:A.warning,sub:`${lowStock} stock faible`}].map(k=>(<div key={k.l} style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"14px":"18px 20px",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:12,right:14,fontSize:22,opacity:.3}}>{k.icon}</div>
+              <div style={{fontSize:10,color:A.textMuted,letterSpacing:1,marginBottom:5,textTransform:"uppercase"}}>{k.l}</div>
+              <div style={{fontSize:mobile?20:26,fontWeight:"bold",color:k.c,marginBottom:3}}>{k.v}</div>
+              <div style={{fontSize:10,color:A.textMuted}}>{k.sub}</div>
+            </div>))}
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:gc("2fr 1fr","1fr","1fr"),gap:14,marginBottom:18}}>
+            <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}>
+              <h3 style={{fontSize:14,color:A.text,marginBottom:14}}>📈 Revenus mensuels</h3>
+              <div style={{display:"flex",alignItems:"flex-end",gap:mobile?8:12,height:mobile?110:160}}>
+                {MONTHLY.map(m=>{const max=Math.max(...MONTHLY.map(d=>d.revenue));return(<div key={m.month} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><div style={{fontSize:9,color:A.accent,fontWeight:"bold"}}>{(m.revenue/1000).toFixed(1)}k</div><div style={{width:"100%",height:(m.revenue/max)*(mobile?90:140),background:`linear-gradient(180deg,${A.accent},${A.accentDim})`,borderRadius:"5px 5px 0 0",transition:"height .5s ease"}} /><div style={{fontSize:9,color:A.textMuted}}>{m.month.slice(0,3)}</div></div>);})}
               </div>
-              <div style={{display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:mobile?16:44,marginTop:mobile?28:46,borderTop:"1px solid #3A1F00",paddingTop:22}}>
-                {[["50+","Artisans"],["10+","Pays"],["100%","Éthique"],["4.9★","Clients"]].map(([v,l])=>(<div key={l}><div style={{fontSize:mobile?20:24,color:G,fontWeight:"bold"}}>{v}</div><div style={{fontSize:9,color:"#A0845C",letterSpacing:1}}>{l}</div></div>))}
-              </div>
+            </div>
+            <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}>
+              <h3 style={{fontSize:14,color:A.text,marginBottom:12}}>🕐 Dernières commandes</h3>
+              {orders.slice(0,4).map(o=>(<div key={o.id} className="arow" onClick={()=>{goPage("orders");setSelectedOrder(o);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 6px",borderBottom:`1px solid ${A.border}`,cursor:"pointer",borderRadius:4}}>
+                <div><div style={{fontSize:12,fontWeight:"bold",color:A.text}}>{o.id}</div><div style={{fontSize:10,color:A.textMuted}}>{o.customer}</div></div>
+                <div style={{textAlign:"right"}}><span style={{background:(sColor[o.status]||A.accent)+"33",color:sColor[o.status]||A.accent,padding:"3px 8px",fontSize:9,borderRadius:10,fontWeight:"bold"}}>{sLabel[o.status]||o.status}</span><div style={{fontSize:11,fontWeight:"bold",color:A.accent,marginTop:3}}>{fmt(o.total)}$</div></div>
+              </div>))}
             </div>
           </div>
 
-          <div style={{padding:mobile?"28px 14px":"50px 24px"}}>
-            <div style={{textAlign:"center",marginBottom:mobile?16:34}}><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:6}}>EXPLORER PAR UNIVERS</div><h2 style={{fontSize:mobile?22:32,color:DARK}}>Nos 5 univers</h2></div>
-            <div style={{display:"grid",gridTemplateColumns:gc("repeat(5,1fr)","repeat(3,1fr)","repeat(2,1fr)"),gap:mobile?10:16}}>
-              {CATEGORIES.map(cat=>(<div key={cat.key} className="hcard" onClick={()=>{setActiveCat(cat.key);goPage("boutique");setSearch("");}} style={{background:CREAM,border:"1px solid "+BORDER,borderTop:`5px solid ${cat.color}`,padding:mobile?"14px 10px":"22px 18px",cursor:"pointer",textAlign:"center",borderRadius:4}}><div style={{fontSize:mobile?24:30,marginBottom:6}}>{cat.emoji}</div><div style={{fontSize:mobile?12:14,fontWeight:"bold",color:DARK,marginBottom:3}}>{mobile?cat.label:cat.full}</div>{!mobile&&<div style={{fontSize:10,color:MUTED,lineHeight:1.5}}>{cat.desc}</div>}</div>))}
-            </div>
+          <div style={{display:"grid",gridTemplateColumns:gc("1fr 1fr","1fr","1fr"),gap:14}}>
+            <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}><h3 style={{fontSize:14,color:A.text,marginBottom:12}}>🏆 Top produits</h3>{[...products].sort((a,b)=>(b.sales||0)-(a.sales||0)).slice(0,5).map((p,i)=>(<div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderBottom:`1px solid ${A.border}`}}><div style={{width:24,height:24,borderRadius:6,background:A.surface2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:"bold",color:A.accent}}>{i+1}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12,color:A.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div><div style={{fontSize:10,color:A.textMuted}}>{p.sales||0} ventes</div></div><div style={{fontSize:12,fontWeight:"bold",color:A.accent,flexShrink:0}}>{fmt((p.price-(p.cost||0))*(p.sales||0))}$</div></div>))}</div>
+            <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}><h3 style={{fontSize:14,color:A.text,marginBottom:12}}>📦 Stock faible</h3>{products.filter(p=>p.stock<10).sort((a,b)=>a.stock-b.stock).slice(0,6).map(p=>(<div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${A.border}`}}><div style={{fontSize:12,color:A.text}}>{p.name}</div><div style={{fontSize:12,fontWeight:"bold",color:p.stock<3?A.danger:p.stock<6?A.warning:A.text}}>{p.stock} en stock</div></div>))}</div>
           </div>
-
-          <div style={{padding:mobile?"20px 14px 36px":"32px 24px 56px",background:BGALT}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:mobile?14:26,flexWrap:"wrap",gap:10}}><div><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:5}}>COUP DE CŒUR</div><h2 style={{fontSize:mobile?22:30,color:DARK}}>Sélection</h2></div><button onClick={()=>{goPage("boutique");setActiveCat(null);setSearch("");}} style={{background:"none",border:`2px solid ${RED}`,color:RED,padding:"7px 14px",fontFamily:"Georgia",fontSize:11,borderRadius:4}}>Voir tout →</button></div>
-            <div style={{display:"grid",gridTemplateColumns:gc("repeat(4,1fr)","repeat(2,1fr)","repeat(2,1fr)"),gap:mobile?10:18}}>
-              {[PRODUCTS[0],PRODUCTS[3],PRODUCTS[9],PRODUCTS[12]].map(p=>(<ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} mobile={mobile} />))}
-            </div>
-          </div>
-
-          <div style={{background:DARK,padding:mobile?"36px 16px":"64px 24px",borderTop:`3px solid ${G}`}}>
-            <div style={{maxWidth:620,margin:"0 auto",textAlign:"center"}}>
-              <div style={{fontSize:9,letterSpacing:5,color:G,marginBottom:12}}>NOTRE HISTOIRE</div>
-              <h2 style={{fontSize:mobile?22:34,color:CREAM,lineHeight:1.3,marginBottom:18}}>Né en Afrique, construit à <span style={{color:G}}>Montréal.</span></h2>
-              <p style={{fontSize:mobile?12:14,color:"#C4945C",lineHeight:1.9,marginBottom:24}}>BADAOUR relie la diaspora africaine à ses racines. Chaque achat soutient un artisan.</p>
-              <div style={{display:"flex",gap:mobile?14:34,justifyContent:"center",flexWrap:"wrap"}}>{[["Commerce éthique","Juste"],["Impact direct","Familles"],["Authenticité","Zéro intermédiaire"]].map(([t,s])=>(<div key={t} style={{minWidth:90}}><div style={{width:34,height:2,background:G,margin:"0 auto 8px"}} /><div style={{color:CREAM,fontWeight:"bold",fontSize:12}}>{t}</div><div style={{color:"#A0845C",fontSize:10}}>{s}</div></div>))}</div>
-            </div>
-          </div>
-        </>)}
-
-        {/* BOUTIQUE */}
-        {page==="boutique"&&(<div style={{padding:mobile?"24px 14px":"40px 24px"}}>
-          <div style={{marginBottom:18}}><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:4}}>BADAOUR</div><h1 style={{fontSize:mobile?24:34,color:DARK,marginBottom:12}}>Boutique</h1>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="cpill" onClick={()=>setActiveCat(null)} style={{background:!activeCat?DARK:"transparent",color:!activeCat?G:DARK,border:`2px solid ${DARK}`,padding:"5px 12px",fontFamily:"Georgia",fontSize:11,borderRadius:4}}>Tout</button>{CATEGORIES.map(cat=>(<button key={cat.key} className="cpill" onClick={()=>setActiveCat(activeCat===cat.key?null:cat.key)} style={{background:activeCat===cat.key?DARK:"transparent",color:activeCat===cat.key?G:DARK,border:`2px solid ${DARK}`,padding:"5px 12px",fontFamily:"Georgia",fontSize:11,borderRadius:4}}>{cat.emoji} {mobile?cat.label:cat.full}</button>))}</div>
-          </div>
-          {filtered.length===0?<div style={{textAlign:"center",padding:60,color:MUTED}}><div style={{fontSize:40}}>🔍</div><div style={{marginTop:10}}>Aucun produit trouvé</div></div>
-          :<div style={{display:"grid",gridTemplateColumns:gc("repeat(4,1fr)","repeat(3,1fr)","repeat(2,1fr)"),gap:mobile?10:18}}>{filtered.map(p=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} mobile={mobile} />)}</div>}
         </div>)}
 
-        {/* ARTISANS */}
-        {page==="artisans"&&(<div style={{padding:mobile?"24px 14px":"48px 24px"}}><div style={{marginBottom:mobile?16:32}}><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:4}}>CEUX QUI CRÉENT</div><h1 style={{fontSize:mobile?24:34,color:DARK}}>Nos Artisans</h1></div>
-          <div style={{display:"grid",gridTemplateColumns:gc("repeat(3,1fr)","repeat(2,1fr)","1fr"),gap:mobile?12:20}}>
-            {ARTISANS.map(a=>(<div key={a.name} className="hcard" style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"16px 14px":"26px 22px",borderRadius:6}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:`linear-gradient(135deg,${DARK},${BROWN})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginBottom:10}}>✂️</div>
-              <div style={{fontSize:mobile?15:17,fontWeight:"bold",color:DARK}}>{a.name}</div>
-              <div style={{fontSize:11,color:RED,letterSpacing:1,marginBottom:4}}>{a.craft}</div>
-              <div style={{fontSize:11,color:MUTED,marginBottom:8}}>📍 {a.city}, {a.country} · {a.exp} ans</div>
-              <p style={{fontSize:12,color:"#666",lineHeight:1.7}}>{a.bio}</p>
+        {/* ═══ ORDERS ═══ */}
+        {page==="orders"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:10}}>
+            <div><h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:3}}>Commandes</h1><p style={{fontSize:12,color:A.textMuted}}>{orders.length} commandes · {pendOrd} en cours</p></div>
+          </div>
+          <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+            {[{k:"all",l:`Toutes (${orders.length})`},...STEPS.map(s=>({k:s.key,l:`${s.icon} ${s.label} (${orders.filter(o=>o.status===s.key).length})`}))].map(f=>(<button key={f.k} onClick={()=>setOrderFilter(f.k)} style={{background:orderFilter===f.k?A.accent+"22":"transparent",color:orderFilter===f.k?A.accent:A.textMuted,border:`1px solid ${orderFilter===f.k?A.accent+"44":A.border}`,padding:"6px 12px",fontSize:10,fontFamily:"Georgia",borderRadius:6}}>{f.l}</button>))}
+          </div>
+
+          {selectedOrder?(<div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"18px":"24px",animation:"fadeUp .3s ease"}}>
+            <button onClick={()=>setSelectedOrder(null)} style={{background:A.surface2,border:`1px solid ${A.border}`,borderRadius:6,padding:"6px 14px",color:A.textDim,fontFamily:"Georgia",fontSize:11,marginBottom:14}}>← Retour</button>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:18}}>
+              <div><div style={{fontSize:20,fontWeight:"bold",color:A.accent}}>{selectedOrder.id}</div><div style={{fontSize:12,color:A.textMuted}}>{selectedOrder.date}</div></div>
+              <span style={{background:(sColor[selectedOrder.status]||A.accent)+"33",color:sColor[selectedOrder.status]||A.accent,padding:"6px 14px",borderRadius:8,fontWeight:"bold",fontSize:13}}>{sLabel[selectedOrder.status]||selectedOrder.status}</span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:16,marginBottom:18}}>
+              <div style={{background:A.bg,borderRadius:8,padding:16}}>
+                <div style={{fontSize:11,color:A.textMuted,marginBottom:8,fontWeight:"bold"}}>👤 CLIENT</div>
+                <div style={{fontSize:14,color:A.text,fontWeight:"bold"}}>{selectedOrder.customer}</div>
+                <div style={{fontSize:12,color:A.textDim,marginTop:3}}>{selectedOrder.email}</div>
+                <div style={{fontSize:12,color:A.textDim}}>{selectedOrder.phone}</div>
+                <div style={{fontSize:11,color:A.textMuted,marginTop:3}}>📍 {selectedOrder.address}</div>
+              </div>
+              <div style={{background:A.bg,borderRadius:8,padding:16}}>
+                <div style={{fontSize:11,color:A.textMuted,marginBottom:8,fontWeight:"bold"}}>📋 ARTICLES</div>
+                {(selectedOrder.items||[]).map((it,i)=>(<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:12,color:A.text}}><span>{it.name||`Produit #${it.pid}`} × {it.qty}</span><span style={{color:A.accent}}>{fmt((it.price||0)*it.qty)}$</span></div>))}
+                <div style={{borderTop:`1px solid ${A.border}`,marginTop:8,paddingTop:8,display:"flex",justifyContent:"space-between",fontWeight:"bold"}}><span>Total</span><span style={{color:A.accent,fontSize:16}}>{fmt(selectedOrder.total)}$</span></div>
+              </div>
+            </div>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:11,color:A.textMuted,marginBottom:10,fontWeight:"bold"}}>📍 PROGRESSION</div>
+              {STEPS.map((step,i)=>{const done=(selectedOrder.events||[]).some(e=>e.step===step.key);return(<div key={step.key} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><div style={{width:28,height:28,borderRadius:"50%",background:done?A.accent+"22":A.surface2,border:`2px solid ${done?A.accent:A.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>{done?step.icon:"○"}</div><span style={{fontSize:12,color:done?A.text:A.textMuted,fontWeight:done?"bold":"normal"}}>{step.label}</span></div>);})}
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <span style={{fontSize:11,color:A.textMuted,alignSelf:"center",marginRight:6}}>Changer le statut :</span>
+              {STEPS.filter(s=>s.key!==selectedOrder.status).map(s=>(<button key={s.key} onClick={()=>{updateStatus(selectedOrder.id,s.key);setSelectedOrder({...selectedOrder,status:s.key});}} style={{background:A.surface2,border:`1px solid ${A.border}`,borderRadius:6,padding:"6px 12px",color:A.text,fontFamily:"Georgia",fontSize:10}}>{s.icon} {s.label}</button>))}
+            </div>
+            <div style={{marginTop:16,borderTop:`1px solid ${A.border}`,paddingTop:12}}><button onClick={()=>deleteOrder(selectedOrder.id)} style={{background:A.dangerBg,border:`1px solid ${A.danger}44`,borderRadius:6,padding:"8px 16px",color:A.danger,fontFamily:"Georgia",fontSize:11}}>🗑️ Supprimer cette commande</button></div>
+          </div>)
+          :(<div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,overflow:"hidden"}}>
+            {filtOrd.length===0?<div style={{padding:40,textAlign:"center",color:A.textMuted}}>Aucune commande avec ce filtre</div>
+            :filtOrd.map(o=>(<div key={o.id} className="arow" onClick={()=>setSelectedOrder(o)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:mobile?"12px 14px":"14px 18px",borderBottom:`1px solid ${A.border}`,cursor:"pointer",flexWrap:"wrap",gap:8}}>
+              <div style={{flex:1,minWidth:140}}>
+                <div style={{fontSize:13,fontWeight:"bold",color:A.text}}>{o.id}</div>
+                <div style={{fontSize:11,color:A.textMuted}}>{o.customer} · {o.date}</div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <span style={{background:(sColor[o.status]||A.accent)+"33",color:sColor[o.status]||A.accent,padding:"4px 10px",fontSize:10,borderRadius:10,fontWeight:"bold"}}>{sLabel[o.status]||o.status}</span>
+                <div style={{fontSize:14,fontWeight:"bold",color:A.accent}}>{fmt(o.total)}$</div>
+              </div>
+            </div>))}
+          </div>)}
+        </div>)}
+
+        {/* ═══ PRODUCTS ═══ */}
+        {page==="products"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:10}}>
+            <div><h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:3}}>Produits</h1><p style={{fontSize:12,color:A.textMuted}}>{products.length} produits · {lowStock} stock faible</p></div>
+            <button onClick={()=>setShowNewProd(!showNewProd)} style={{background:A.accent,color:DARK,border:"none",padding:"10px 18px",borderRadius:8,fontFamily:"Georgia",fontSize:12,fontWeight:"bold"}}>+ Nouveau produit</button>
+          </div>
+
+          {showNewProd&&(<div style={{background:A.surface,border:`1px solid ${A.accent}44`,borderRadius:10,padding:mobile?"18px":"24px",marginBottom:16,animation:"fadeUp .3s ease"}}>
+            <h3 style={{fontSize:15,color:A.accent,marginBottom:14}}>✨ Nouveau produit</h3>
+            <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:"0 16px"}}>
+              <Inp label="Nom du produit *" value={newProd.name} onChange={e=>setNewProd({...newProd,name:e.target.value})} placeholder="Grand Boubou Brodé" />
+              <div style={{marginBottom:12}}><label style={{display:"block",fontSize:9,letterSpacing:2,color:A.textMuted,textTransform:"uppercase",marginBottom:4}}>Catégorie</label><select value={newProd.category} onChange={e=>setNewProd({...newProd,category:e.target.value})} style={{width:"100%",padding:"10px 12px",background:A.bg,border:`1px solid ${A.border}`,borderRadius:6,color:A.text,fontSize:12,fontFamily:"Georgia"}}>{CATS.map(c=><option key={c.key} value={c.key}>{c.emoji} {c.label}</option>)}</select></div>
+              <Inp label="Sous-catégorie" value={newProd.sub} onChange={e=>setNewProd({...newProd,sub:e.target.value})} placeholder="Boubou, Robe, Masque..." />
+              <Inp label="Artisan" value={newProd.artisan} onChange={e=>setNewProd({...newProd,artisan:e.target.value})} placeholder="Moussa Diallo" />
+              <Inp label="Ville" value={newProd.city} onChange={e=>setNewProd({...newProd,city:e.target.value})} placeholder="Dakar" />
+              <Inp label="Pays" value={newProd.country} onChange={e=>setNewProd({...newProd,country:e.target.value})} placeholder="Sénégal" />
+              <Inp label="Prix de vente ($CA) *" type="number" value={newProd.price} onChange={e=>setNewProd({...newProd,price:e.target.value})} />
+              <Inp label="Coût ($CA)" type="number" value={newProd.cost} onChange={e=>setNewProd({...newProd,cost:e.target.value})} />
+              <Inp label="Stock" type="number" value={newProd.stock} onChange={e=>setNewProd({...newProd,stock:e.target.value})} />
+              <Inp label="Description" value={newProd.desc} onChange={e=>setNewProd({...newProd,desc:e.target.value})} placeholder="Broderie main..." />
+            </div>
+            <div style={{display:"flex",gap:10,marginTop:6}}>
+              <button onClick={addProduct} style={{background:A.accent,color:DARK,border:"none",padding:"10px 20px",borderRadius:6,fontFamily:"Georgia",fontWeight:"bold",fontSize:12}}>✓ Ajouter et sauvegarder</button>
+              <button onClick={()=>setShowNewProd(false)} style={{background:A.surface2,color:A.textDim,border:`1px solid ${A.border}`,padding:"10px 20px",borderRadius:6,fontFamily:"Georgia",fontSize:12}}>Annuler</button>
+            </div>
+          </div>)}
+
+          <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,overflow:"hidden"}}>
+            {products.map(p=>(<div key={p.id} className="arow" style={{display:"flex",alignItems:"center",padding:mobile?"10px 12px":"12px 16px",borderBottom:`1px solid ${A.border}`,gap:12}}>
+              <div style={{width:40,height:40,borderRadius:8,background:`linear-gradient(135deg,${p.color||"#8B5E3C"},${DARK})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{CATS.find(c=>c.key===p.category)?.emoji||"✨"}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:"bold",color:A.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
+                <div style={{fontSize:10,color:A.textMuted}}>✂️ {p.artisan} · {p.city}, {p.country}</div>
+              </div>
+              {!mobile&&<div style={{textAlign:"center",minWidth:60}}><div style={{fontSize:13,fontWeight:"bold",color:A.accent}}>{p.price}$</div><div style={{fontSize:9,color:A.textMuted}}>coût: {p.cost||0}$</div></div>}
+              <div style={{textAlign:"center",minWidth:50}}><div style={{fontSize:13,fontWeight:"bold",color:p.stock<3?A.danger:p.stock<6?A.warning:A.text}}>{p.stock}</div><div style={{fontSize:9,color:A.textMuted}}>stock</div></div>
+              {!mobile&&<div style={{textAlign:"center",minWidth:50}}><div style={{fontSize:13,fontWeight:"bold",color:A.text}}>{p.sales||0}</div><div style={{fontSize:9,color:A.textMuted}}>ventes</div></div>}
+              <button onClick={()=>deleteProduct(p.id)} style={{background:A.dangerBg,border:"none",borderRadius:6,padding:"6px 10px",color:A.danger,fontSize:11,flexShrink:0}}>🗑️</button>
             </div>))}
           </div>
         </div>)}
 
-        {/* SUIVI */}
-        {page==="suivi"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",maxWidth:800,margin:"0 auto"}}>
-          <div style={{marginBottom:20}}><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:4}}>EN TEMPS RÉEL</div><h1 style={{fontSize:mobile?24:34,color:DARK,marginBottom:6}}>Suivi commande</h1><p style={{color:MUTED,fontSize:13}}>Format : <strong>BDR-YYYY-XXXX</strong></p></div>
-          <div style={{display:"flex",gap:0,marginBottom:18,flexDirection:mobile?"column":"row"}}>
-            <input value={trackId} onChange={e=>setTrackId(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&doTrack()} placeholder="Ex: BDR-2025-0042" style={{flex:1,padding:"12px 16px",background:CREAM,border:`2px solid ${DARK}`,borderRight:mobile?`2px solid ${DARK}`:"none",fontFamily:"Georgia",fontSize:14,letterSpacing:2,borderRadius:mobile?"4px 4px 0 0":"4px 0 0 4px"}} />
-            <button onClick={doTrack} style={{background:DARK,color:G,border:"none",padding:"12px 24px",fontFamily:"Georgia",fontWeight:"bold",fontSize:12,letterSpacing:2,textTransform:"uppercase",borderRadius:mobile?"0 0 4px 4px":"0 4px 4px 0"}}>SUIVRE →</button>
-          </div>
-          {trackErr&&<div style={{background:"#FFF0F0",border:`2px solid ${RED}`,padding:"10px 14px",color:RED,marginBottom:16,fontSize:12,borderRadius:4}}>❌ {trackErr}</div>}
-          {trackResult&&(<div style={{animation:"fadeUp .4s ease"}}>
-            <div style={{background:DARK,padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,borderRadius:"6px 6px 0 0",borderBottom:`3px solid ${G}`}}>
-              <div><div style={{fontSize:8,color:"#A0845C",letterSpacing:3}}>COMMANDE</div><div style={{fontSize:mobile?14:17,color:G,fontWeight:"bold",letterSpacing:2}}>{trackResult.id}</div></div>
-              <span style={{background:statusColors[trackResult.status],color:"white",padding:"4px 10px",fontSize:10,fontWeight:"bold",borderRadius:4}}>{statusLabels[trackResult.status]}</span>
-            </div>
-            <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"16px 12px":"24px 28px",borderRadius:"0 0 6px 6px"}}>
-              {TRACKING_STEPS.map((step,i)=>{const ci=TRACKING_STEPS.findIndex(s=>s.key===trackResult.status);const done=i<ci,active=i===ci;const ev=trackResult.events?.find(e=>e.step===step.key);
-                return (<div key={step.key} style={{display:"flex",gap:12,position:"relative"}}>{i<TRACKING_STEPS.length-1&&<div style={{position:"absolute",left:16,top:34,width:2,height:24,background:done?GREEN:BORDER,zIndex:0}} />}<div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,zIndex:1,background:done?GREEN:active?G:BORDER,color:done||active?DARK:"#aaa",display:"flex",alignItems:"center",justifyContent:"center",fontSize:done?14:12,fontWeight:"bold",border:active?`3px solid ${DARK}`:"none",marginBottom:22}}>{done?"✓":step.icon}</div><div style={{paddingTop:3,paddingBottom:12}}><div style={{fontSize:12,fontWeight:active?"bold":"normal",color:done||active?DARK:"#aaa"}}>{step.label}</div>{ev&&<div style={{fontSize:10,color:"#666",marginTop:1}}>📅 {ev.date}{ev.note&&!mobile?` — ${ev.note}`:""}</div>}</div></div>);
-              })}
-            </div>
-          </div>)}
-        </div>)}
-
-        {/* AUTH */}
-        {page==="auth"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",maxWidth:440,margin:"0 auto"}}>
-          <div style={{textAlign:"center",marginBottom:22}}><div style={{fontSize:22,color:G,letterSpacing:4,fontWeight:"bold"}}>BADAOUR</div><div style={{fontSize:10,color:MUTED,letterSpacing:2,marginTop:4}}>{authMode==="login"?"CONNEXION":"CRÉER UN COMPTE"}</div></div>
-          <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"20px 16px":"30px 32px",borderRadius:6}}>
-            <div style={{display:"flex",gap:0,marginBottom:18}}>{[["login","Se connecter"],["register","S'inscrire"]].map(([m,l])=>(<button key={m} onClick={()=>setAuthMode(m)} style={{flex:1,padding:"9px",fontFamily:"Georgia",fontSize:12,border:`2px solid ${DARK}`,background:authMode===m?DARK:"transparent",color:authMode===m?G:DARK,fontWeight:authMode===m?"bold":"normal",borderRadius:m==="login"?"4px 0 0 4px":"0 4px 4px 0"}}>{l}</button>))}</div>
-            {authMode==="login"?(<><FInp label="Email" type="email" placeholder="votre@email.com" value={authForm.email} onChange={e=>setAuthForm({...authForm,email:e.target.value})} /><FInp label="Mot de passe" type="password" placeholder="••••••" value={authForm.password} onChange={e=>setAuthForm({...authForm,password:e.target.value})} /><button onClick={handleLogin} style={{width:"100%",background:DARK,color:G,border:"none",padding:"13px",fontSize:13,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,textTransform:"uppercase",borderRadius:4}}>SE CONNECTER</button><div style={{textAlign:"center",marginTop:12,fontSize:11,color:MUTED}}>Demo: demo@badaour.com / demo123</div></>)
-            :(<><div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:10}}><FInp label="Prénom *" value={authForm.firstName} onChange={e=>setAuthForm({...authForm,firstName:e.target.value})} /><FInp label="Nom" value={authForm.lastName} onChange={e=>setAuthForm({...authForm,lastName:e.target.value})} /></div><FInp label="Email *" type="email" value={authForm.email} onChange={e=>setAuthForm({...authForm,email:e.target.value})} /><FInp label="Mot de passe *" type="password" value={authForm.password} onChange={e=>setAuthForm({...authForm,password:e.target.value})} /><FInp label="Confirmer" type="password" value={authForm.confirm} onChange={e=>setAuthForm({...authForm,confirm:e.target.value})} /><button onClick={handleRegister} style={{width:"100%",background:RED,color:G,border:"none",padding:"13px",fontSize:13,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,textTransform:"uppercase",borderRadius:4}}>CRÉER MON COMPTE</button></>)}
-          </div>
-        </div>)}
-
-        {/* COMPTE */}
-        {page==="compte"&&currentUser&&(<div style={{padding:mobile?"24px 14px":"44px 24px",maxWidth:880,margin:"0 auto"}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:22,flexDirection:mobile?"column":"row",gap:12}}>
-            <div><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:4}}>MON ESPACE</div><h1 style={{fontSize:mobile?24:32,color:DARK}}>Bonjour, {currentUser.firstName} 👋</h1></div>
-            <button onClick={()=>{setCurrentUser(null);goPage("home");toast("Déconnecté","info");}} style={{background:"transparent",border:"2px solid "+BORDER,color:MUTED,padding:"8px 16px",fontFamily:"Georgia",fontSize:11,borderRadius:4,alignSelf:"flex-start"}}>Déconnexion</button>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:gc("repeat(3,1fr)","repeat(3,1fr)","1fr"),gap:12,marginBottom:20}}>{[["📦","Commandes",(currentUser.orders||[]).length],["❤️","Souhaits",wishlist.length],["🌍","Livraison","Afrique→CA"]].map(([e,l,v])=>(<div key={l} style={{background:CREAM,border:"1px solid "+BORDER,padding:"14px 16px",borderRadius:6}}><div style={{fontSize:20,marginBottom:4}}>{e}</div><div style={{fontSize:9,letterSpacing:2,color:MUTED,textTransform:"uppercase"}}>{l}</div><div style={{fontSize:16,fontWeight:"bold",color:DARK}}>{v}</div></div>))}</div>
-          <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"14px":"24px 26px",borderRadius:6}}>
-            <h3 style={{fontSize:15,color:DARK,marginBottom:12}}>📋 Mes commandes</h3>
-            {(currentUser.orders||[]).length===0?<div style={{textAlign:"center",padding:"24px 0",color:MUTED}}>📦 Aucune commande<br/><button onClick={()=>goPage("boutique")} style={{marginTop:10,background:DARK,color:G,border:"none",padding:"8px 16px",fontFamily:"Georgia",fontSize:11,borderRadius:4}}>DÉCOUVRIR</button></div>
-            :(currentUser.orders||[]).map(o=>(<div key={o.id} style={{border:"1px solid "+BORDER,padding:"10px 14px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center",borderRadius:4,flexWrap:"wrap",gap:4}}><div><div style={{fontWeight:"bold",fontSize:13}}>{o.id}</div><div style={{fontSize:10,color:MUTED}}>{o.date}</div></div><div style={{textAlign:"right"}}><span style={{background:statusColors[o.status]||GREEN,color:"white",padding:"2px 8px",fontSize:9,fontWeight:"bold",borderRadius:10}}>{statusLabels[o.status]||o.status}</span><div style={{fontWeight:"bold",color:RED,marginTop:3,fontSize:13}}>{fmt(o.total)} $</div></div></div>))}
-          </div>
-        </div>)}
-
-        {/* PANIER */}
-        {page==="panier"&&(<div style={{padding:mobile?"20px 14px":"40px 24px",maxWidth:980,margin:"0 auto"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:mobile?16:30,gap:0}}>
-            {["cart","info","payment"].map((k,i)=>{const labels=mobile?["🛒","📍","💳"]:["Panier","Livraison","Paiement"];const cur=["cart","info","payment"].indexOf(payStep),done=i<cur,active=i===cur;return(<div key={k} style={{display:"flex",alignItems:"center"}}><div style={{display:"flex",alignItems:"center",gap:mobile?3:7}}><div style={{width:mobile?26:30,height:mobile?26:30,borderRadius:"50%",background:done?GREEN:active?G:BORDER,color:done||active?DARK:"#aaa",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:"bold",fontSize:mobile?11:12}}>{done?"✓":labels[i]}</div>{!mobile&&<span style={{fontSize:11,color:active?DARK:"#aaa",fontWeight:active?"bold":"normal"}}>{labels[i]}</span>}</div>{i<2&&<div style={{width:mobile?20:44,height:2,background:done?GREEN:BORDER,margin:"0 6px"}} />}</div>);})}
-          </div>
-
-          {payStep==="cart"&&(<div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 260px",gap:16}}>
-            <div><h2 style={{fontSize:mobile?20:24,color:DARK,marginBottom:12}}>Mon Panier</h2>
-              {cart.length===0?<div style={{textAlign:"center",padding:36,background:CREAM,border:"1px solid "+BORDER,borderRadius:6}}>🛒<div style={{color:MUTED,margin:"8px 0 14px"}}>Panier vide</div><button onClick={()=>goPage("boutique")} style={{background:DARK,color:G,border:"none",padding:"10px 20px",fontFamily:"Georgia",letterSpacing:2,fontSize:11,borderRadius:4}}>DÉCOUVRIR</button></div>
-              :cart.map(item=>(<div key={item.id} style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"10px":"14px 18px",marginBottom:8,display:"flex",alignItems:"center",gap:mobile?8:14,borderRadius:6,flexWrap:"wrap"}}>
-                <div style={{width:40,height:40,background:`linear-gradient(135deg,${item.color||BROWN},${DARK})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,borderRadius:6}}><CatIcon category={item.category} size={24}/></div>
-                <div style={{flex:1,minWidth:80}}><div style={{fontSize:13,fontWeight:"bold",color:DARK}}>{item.name}</div>{!mobile&&<div style={{fontSize:10,color:MUTED}}>✂️ {item.artisan}</div>}</div>
-                <div style={{display:"flex",alignItems:"center",gap:6}}><button onClick={()=>updateQty(item.id,-1)} style={{width:28,height:28,border:"1px solid "+BORDER,background:"white",fontSize:15,borderRadius:4}}>−</button><span style={{fontSize:13,fontWeight:"bold",minWidth:18,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:28,height:28,border:"1px solid "+BORDER,background:"white",fontSize:15,borderRadius:4}}>+</button></div>
-                <div style={{minWidth:60,textAlign:"right"}}><div style={{fontSize:14,fontWeight:"bold",color:RED}}>{fmt(item.price*item.qty)} $</div><button onClick={()=>removeItem(item.id)} style={{background:"none",border:"none",color:MUTED,fontSize:10}}>✕</button></div>
-              </div>))}
-            </div>
-            <CartSummary {...{subtotal,shipping,taxes,total,mobile}} onContinue={()=>{if(!cart.length){toast("Ajoutez des articles","info");return;}setPayStep("info");}} />
-          </div>)}
-
-          {payStep==="info"&&(<div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 240px",gap:16}}>
-            <div><h2 style={{fontSize:mobile?20:24,color:DARK,marginBottom:12}}>Livraison</h2>
-              <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"16px 14px":"26px 30px",borderRadius:6}}>
-                <FInp label="Nom *" placeholder="Mamadou Diallo" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} />
-                <FInp label="Email *" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} />
-                <FInp label="Téléphone" type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} />
-                <FInp label="Adresse *" value={form.address} onChange={e=>setForm({...form,address:e.target.value})} />
-                <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"2fr 1fr 1fr",gap:10}}><FInp label="Ville" value={form.city} onChange={e=>setForm({...form,city:e.target.value})} /><FInp label="Province" value={form.province} onChange={e=>setForm({...form,province:e.target.value})} /><FInp label="Code postal" value={form.postal} onChange={e=>setForm({...form,postal:e.target.value})} /></div>
-                <div style={{display:"flex",gap:10,marginTop:8,flexDirection:mobile?"column-reverse":"row"}}><button onClick={()=>setPayStep("cart")} style={{flex:1,background:"transparent",color:DARK,border:"2px solid "+BORDER,padding:"11px",fontFamily:"Georgia",fontSize:12,borderRadius:4}}>← Retour</button><button onClick={()=>{if(!form.name||!form.email||!form.address){toast("Champs * requis","info");return;}setPayStep("payment");}} style={{flex:2,background:DARK,color:G,border:"none",padding:"11px",fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,fontSize:12,textTransform:"uppercase",borderRadius:4}}>Paiement →</button></div>
+        {/* ═══ ARTISANS ═══ */}
+        {page==="artisans"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:5}}>Artisans partenaires</h1>
+          <p style={{fontSize:12,color:A.textMuted,marginBottom:16}}>{ARTISANS.length} artisans actifs</p>
+          <div style={{display:"grid",gridTemplateColumns:gc("repeat(2,1fr)","repeat(2,1fr)","1fr"),gap:14}}>
+            {ARTISANS.map(a=>(<div key={a.id} style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px",display:"flex",gap:14,alignItems:"flex-start"}}>
+              <div style={{width:48,height:48,borderRadius:"50%",background:A.accentGlow,border:`1px solid ${A.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>✂️</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:15,fontWeight:"bold",color:A.text}}>{a.name}</div>
+                <div style={{fontSize:11,color:A.accent,marginBottom:4}}>{a.craft}</div>
+                <div style={{fontSize:10,color:A.textMuted,marginBottom:10}}>📍 {a.city}, {a.country} · {a.exp} ans d'expérience</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+                  {[["Prod.",a.products],["Ventes",a.sales],["Rev.",`${(a.revenue/1000).toFixed(1)}k$`],["Note",`${a.rating}⭐`]].map(([l,v])=>(<div key={l} style={{background:A.bg,borderRadius:6,padding:"6px 4px",textAlign:"center"}}><div style={{fontSize:12,fontWeight:"bold",color:A.accent}}>{v}</div><div style={{fontSize:8,color:A.textMuted}}>{l}</div></div>))}
+                </div>
               </div>
-            </div>
-            <CartSummary {...{subtotal,shipping,taxes,total,mobile}} />
-          </div>)}
-
-          {payStep==="payment"&&(<div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 240px",gap:16}}>
-            <div><h2 style={{fontSize:mobile?20:24,color:DARK,marginBottom:12}}>Paiement</h2>
-              <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"16px 14px":"26px 30px",borderRadius:6}}>
-                <div style={{display:"flex",gap:6,marginBottom:16}}>{[["card","💳 Carte"],["paypal","🅿️ PayPal"],["interac","🏦 Interac"]].map(([m,l])=>(<button key={m} onClick={()=>setPayMethod(m)} style={{flex:1,padding:"9px 4px",fontFamily:"Georgia",fontSize:mobile?10:11,background:payMethod===m?DARK:"white",color:payMethod===m?G:DARK,border:payMethod===m?`2px solid ${DARK}`:"2px solid "+BORDER,fontWeight:payMethod===m?"bold":"normal",borderRadius:4}}>{l}</button>))}</div>
-                {payMethod==="card"&&(<><FInp label="Numéro" placeholder="1234 5678 9012 3456" value={cardD.number} onChange={e=>{let v=e.target.value.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();setCardD({...cardD,number:v});}} /><FInp label="Nom" placeholder="NOM COMPLET" value={cardD.name} onChange={e=>setCardD({...cardD,name:e.target.value.toUpperCase()})} /><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><FInp label="Exp." placeholder="12/27" value={cardD.expiry} onChange={e=>{let v=e.target.value.replace(/\D/g,"").slice(0,4);if(v.length>2)v=v.slice(0,2)+"/"+v.slice(2);setCardD({...cardD,expiry:v});}} /><FInp label="CVV" placeholder="•••" type="password" value={cardD.cvv} onChange={e=>setCardD({...cardD,cvv:e.target.value.replace(/\D/g,"").slice(0,4)})} /></div><div style={{background:"#F0FFF4",border:"1px solid "+GREEN,padding:"8px 12px",fontSize:10,color:GREEN,borderRadius:4}}>🔒 SSL 256-bit</div></>)}
-                {payMethod==="paypal"&&<div style={{textAlign:"center",padding:"24px",background:"#F7F9FC",border:"1px dashed "+BORDER,borderRadius:6}}>🅿️<div style={{fontWeight:"bold",marginTop:6}}>PayPal</div><div style={{fontSize:11,color:MUTED,marginTop:4}}>Redirection PayPal</div></div>}
-                {payMethod==="interac"&&<div style={{textAlign:"center",padding:"24px",background:"#FFF9F0",border:"1px dashed "+BORDER,borderRadius:6}}>🏦<div style={{fontWeight:"bold",marginTop:6}}>Interac</div><div style={{fontSize:11,color:MUTED,marginTop:4}}>{EMAIL}</div></div>}
-                <div style={{display:"flex",gap:10,marginTop:16,flexDirection:mobile?"column-reverse":"row"}}><button onClick={()=>setPayStep("info")} style={{flex:1,background:"transparent",color:DARK,border:"2px solid "+BORDER,padding:"11px",fontFamily:"Georgia",fontSize:12,borderRadius:4}}>← Retour</button><button onClick={confirmOrder} style={{flex:2,background:RED,color:G,border:"none",padding:"13px",fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,fontSize:13,textTransform:"uppercase",borderRadius:4}}>🔒 {fmt(total)} $</button></div>
-              </div>
-            </div>
-            <CartSummary {...{subtotal,shipping,taxes,total,mobile}} address={form} />
-          </div>)}
-        </div>)}
-
-        {/* SUR MESURE */}
-        {page==="commande"&&(<div style={{padding:mobile?"24px 14px":"48px 24px",maxWidth:700,margin:"0 auto"}}>
-          <div style={{marginBottom:18}}><div style={{fontSize:9,letterSpacing:5,color:RED,marginBottom:4}}>PERSONNALISÉ</div><h1 style={{fontSize:mobile?24:34,color:DARK,marginBottom:6}}>Sur mesure</h1><p style={{color:MUTED,fontSize:13}}>Remplissez ce formulaire pour une commande personnalisée.</p></div>
-          <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"18px 14px":"30px 34px",borderRadius:6}}>
-            <FInp label="Nom complet" placeholder="Mamadou Diallo" /><FInp label="Email" type="email" placeholder={EMAIL} /><FInp label="Téléphone" type="tel" placeholder={PHONE} /><FInp label="Ville" placeholder="Montréal, QC" />
-            <div style={{marginBottom:14}}><label style={{fontSize:9,letterSpacing:2,color:RED,textTransform:"uppercase",display:"block",marginBottom:4}}>Catégorie</label><select style={{width:"100%",padding:"10px 12px",background:BG,border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",borderRadius:4}}>{["Homme","Femme","Enfant","Art","Divers"].map(o=><option key={o}>{o}</option>)}</select></div>
-            <div style={{marginBottom:14}}><label style={{fontSize:9,letterSpacing:2,color:RED,textTransform:"uppercase",display:"block",marginBottom:4}}>Détails</label><textarea placeholder="Couleurs, taille, matières..." rows={4} style={{width:"100%",padding:"10px 12px",background:BG,border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",resize:"vertical",borderRadius:4}} /></div>
-            <div style={{marginBottom:18}}><label style={{fontSize:9,letterSpacing:2,color:RED,textTransform:"uppercase",display:"block",marginBottom:4}}>Budget</label><select style={{width:"100%",padding:"10px 12px",background:BG,border:`2px solid ${BORDER}`,color:DARK,fontSize:14,fontFamily:"Georgia",borderRadius:4}}>{["< 50 $","50–150 $","150–300 $","300–500 $","> 500 $"].map(o=><option key={o}>{o}</option>)}</select></div>
-            <button onClick={()=>toast("Demande reçue ! Réponse sous 48h ✓")} style={{width:"100%",background:DARK,color:G,border:"none",padding:"14px",fontSize:12,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:3,textTransform:"uppercase",borderRadius:4}}>ENVOYER</button>
+            </div>))}
           </div>
         </div>)}
-      </div>
 
-      {/* FOOTER */}
-      <footer style={{background:"#0D0500",color:"#A0845C",padding:mobile?"24px 0 12px":"40px 0 18px",borderTop:"3px solid #3A1F00",marginTop:36}}>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+px,display:"grid",gridTemplateColumns:mobile?"1fr":tablet?"1fr 1fr":"2fr 1fr 1fr 1fr",gap:mobile?18:28,marginBottom:18}}>
-          <div><div style={{fontSize:18,color:G,letterSpacing:4,fontWeight:"bold",marginBottom:8}}>BADAOUR</div><p style={{fontSize:11,lineHeight:1.8,color:MUTED}}>L'Afrique à votre porte.</p><div style={{marginTop:8,fontSize:11,color:MUTED}}>📞 {PHONE}<br/>✉️ {EMAIL}</div></div>
-          {!mobile&&[["Boutique",["Homme","Femme","Enfant","Art","Divers"]],["Aide",["Livraison","Retours","FAQ","Contact"]]].map(([t,links])=>(<div key={t}><div style={{color:G,fontWeight:"bold",letterSpacing:2,fontSize:9,textTransform:"uppercase",marginBottom:8}}>{t}</div>{links.map(l=><div key={l} style={{color:MUTED,fontSize:11,marginBottom:5,cursor:"pointer"}}>{l}</div>)}</div>))}
-        </div>
-        <div style={{maxWidth:1200,margin:"0 auto",padding:"0 "+px,borderTop:"1px solid #3A1F00",paddingTop:10,display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:9,flexWrap:"wrap",gap:4}}><span>© 2025 BADAOUR · Montréal</span><a href="#/admin" style={{color:"#3A1F00",textDecoration:"none",cursor:"pointer",fontSize:8,padding:"2px 8px",borderRadius:4,transition:"color 0.3s"}} onMouseEnter={e=>e.target.style.color="#D4AF37"} onMouseLeave={e=>e.target.style.color="#3A1F00"}>⚙️ Admin</a><span style={{color:G}}>❤️ Diaspora africaine</span></div>
-      </footer>
-    </div>
-  );
-}
+        {/* ═══ CUSTOMERS ═══ */}
+        {page==="customers"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:5}}>Clients</h1>
+          <p style={{fontSize:12,color:A.textMuted,marginBottom:16}}>{[...new Set(orders.map(o=>o.email))].length} clients uniques</p>
+          <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,overflow:"hidden"}}>
+            {orders.length===0?<div style={{padding:40,textAlign:"center",color:A.textMuted}}>Aucun client pour le moment</div>
+            :[...new Map(orders.map(o=>[o.email,o])).values()].map(o=>{const co=orders.filter(ord=>ord.email===o.email);return(
+              <div key={o.email} className="arow" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:mobile?"12px 14px":"14px 18px",borderBottom:`1px solid ${A.border}`,flexWrap:"wrap",gap:8}}>
+                <div style={{flex:1,minWidth:140}}><div style={{fontSize:13,fontWeight:"bold",color:A.text}}>{o.customer}</div><div style={{fontSize:11,color:A.textMuted}}>{o.email}</div>{o.phone&&<div style={{fontSize:10,color:A.textMuted}}>{o.phone}</div>}</div>
+                <div style={{display:"flex",gap:14,alignItems:"center"}}><div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:"bold",color:A.text}}>{co.length}</div><div style={{fontSize:9,color:A.textMuted}}>commandes</div></div><div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:"bold",color:A.accent}}>{fmt(co.reduce((s,c)=>s+c.total,0))}$</div><div style={{fontSize:9,color:A.textMuted}}>total</div></div></div>
+              </div>
+            );})}
+          </div>
+        </div>)}
 
-function ProductCard({p,addToCart,wishlist,toggleWish,mobile}) {
-  const [added,setAdded] = useState(false);
-  const handle = () => { addToCart(p); setAdded(true); setTimeout(()=>setAdded(false),1500); };
-  return (
-    <div className="hcard" style={{background:CREAM,border:"1px solid "+BORDER,overflow:"hidden",borderRadius:6}}>
-      <div style={{height:mobile?120:175,background:`linear-gradient(145deg,${p.color||BROWN},${DARK})`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-        <CatIcon category={p.category} size={mobile?40:65} />
-        <div style={{position:"absolute",top:8,left:8,background:tagColors[p.tag]||"#666",color:"white",padding:"2px 7px",fontSize:8,fontWeight:"bold",borderRadius:4}}>{p.tag}</div>
-        {!mobile&&<div style={{position:"absolute",top:8,right:8,background:"rgba(26,10,0,.6)",color:G,padding:"2px 7px",fontSize:8,borderRadius:4}}>🌍 {p.country}</div>}
-        <button onClick={()=>toggleWish(p.id)} style={{position:"absolute",bottom:6,right:6,background:"rgba(0,0,0,.4)",border:"none",borderRadius:"50%",width:28,height:28,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{wishlist.includes(p.id)?"❤️":"🤍"}</button>
-      </div>
-      <div style={{padding:mobile?"8px 10px":"12px 16px"}}>
-        <div style={{fontSize:8,letterSpacing:2,color:RED,textTransform:"uppercase",marginBottom:2}}>{p.sub}</div>
-        <div style={{fontSize:mobile?12:14,fontWeight:"bold",color:DARK,marginBottom:2}}>{p.name}</div>
-        {!mobile&&<div style={{fontSize:10,color:MUTED,fontStyle:"italic",marginBottom:2}}>✂️ {p.artisan}, {p.city}</div>}
-        {!mobile&&<div style={{fontSize:10,color:"#666",marginBottom:8,lineHeight:1.5}}>{p.desc}</div>}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:mobile?4:0}}>
-          <span style={{fontSize:mobile?14:17,fontWeight:"bold",color:RED}}>{p.price} $</span>
-          <button onClick={handle} style={{background:added?GREEN:DARK,color:G,border:"none",padding:mobile?"5px 10px":"6px 14px",fontFamily:"Georgia",fontSize:mobile?9:10,letterSpacing:1,borderRadius:4}}>{added?"✓":mobile?"+":"Ajouter"}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+        {/* ═══ ANALYTICS ═══ */}
+        {page==="analytics"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:5}}>Analytiques</h1>
+          <p style={{fontSize:12,color:A.textMuted,marginBottom:16}}>Performance détaillée</p>
+          <div style={{display:"grid",gridTemplateColumns:gc("repeat(3,1fr)","repeat(3,1fr)","1fr"),gap:12,marginBottom:18}}>
+            {[{l:"CA Total",v:`${fmt(totalRev)} $`,c:A.accent},{l:"Profit estimé",v:`${fmt(totalProfit)} $`,c:A.success},{l:"Marge",v:`${totalRev>0?(totalProfit/totalRev*100).toFixed(1):0}%`,c:A.info}].map(k=>(<div key={k.l} style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}><div style={{fontSize:10,color:A.textMuted,letterSpacing:1,marginBottom:6}}>{k.l}</div><div style={{fontSize:mobile?22:28,fontWeight:"bold",color:k.c}}>{k.v}</div></div>))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:gc("1fr 1fr","1fr","1fr"),gap:14}}>
+            <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}><h3 style={{fontSize:14,color:A.text,marginBottom:12}}>Ventes par catégorie</h3>{CATS.map(cat=>{const cp=products.filter(p=>p.category===cat.key);const cs=cp.reduce((s,p)=>s+(p.sales||0),0);const max=Math.max(...CATS.map(c=>products.filter(p=>p.category===c.key).reduce((s,p)=>s+(p.sales||0),0)),1);return(<div key={cat.key} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,color:A.text}}>{cat.emoji} {cat.label}</span><span style={{fontSize:11,color:A.accent,fontWeight:"bold"}}>{cs} ventes</span></div><div style={{height:8,background:A.bg,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${(cs/max)*100}%`,background:cat.color,borderRadius:4,transition:"width .5s ease"}} /></div></div>);})}</div>
+            <div style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"20px"}}><h3 style={{fontSize:14,color:A.text,marginBottom:12}}>Revenus par pays</h3>{[...new Set(products.map(p=>p.country))].map(country=>{const cp=products.filter(p=>p.country===country);const rev=cp.reduce((s,p)=>s+p.price*(p.sales||0),0);return(<div key={country} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:`1px solid ${A.border}`}}><div><div style={{fontSize:12,color:A.text}}>🌍 {country}</div><div style={{fontSize:10,color:A.textMuted}}>{cp.length} produits</div></div><div style={{fontSize:13,fontWeight:"bold",color:A.accent}}>{fmt(rev)}$</div></div>);})}</div>
+          </div>
+        </div>)}
 
-function CartSummary({subtotal,shipping,taxes,total,onContinue,address,mobile}) {
-  return (
-    <div style={{background:CREAM,border:"1px solid "+BORDER,padding:mobile?"14px":"20px",alignSelf:"start",borderRadius:6}}>
-      <h3 style={{fontSize:13,color:DARK,marginBottom:10,borderBottom:"1px solid "+BORDER,paddingBottom:8}}>Récapitulatif</h3>
-      {[["Sous-total",`${fmt(subtotal)} $`],["Livraison",shipping===0?"GRATUIT ✨":`${shipping} $`],["Taxes",`${fmt(taxes)} $`]].map(([l,v])=>(<div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:12}}><span style={{color:MUTED}}>{l}</span><span>{v}</span></div>))}
-      <div style={{borderTop:`2px solid ${DARK}`,paddingTop:10,marginTop:6,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:14,fontWeight:"bold"}}>Total</span><span style={{fontSize:17,fontWeight:"bold",color:RED}}>{fmt(total)} $</span></div>
-      {onContinue&&<button onClick={onContinue} style={{width:"100%",background:DARK,color:G,border:"none",padding:"12px",marginTop:12,fontSize:12,fontFamily:"Georgia",fontWeight:"bold",letterSpacing:2,textTransform:"uppercase",borderRadius:4}}>Continuer →</button>}
-      {address?.name&&<div style={{marginTop:10,fontSize:10,color:MUTED,borderTop:"1px solid "+BORDER,paddingTop:8}}>📍 {address.name}, {address.address}</div>}
-      <div style={{textAlign:"center",marginTop:6,fontSize:9,color:MUTED}}>🔒 Paiement sécurisé</div>
+        {/* ═══ SETTINGS ═══ */}
+        {page==="settings"&&(<div style={{animation:"fadeUp .4s ease"}}>
+          <h1 style={{fontSize:mobile?22:26,color:A.text,marginBottom:5}}>Paramètres</h1>
+          <p style={{fontSize:12,color:A.textMuted,marginBottom:16}}>Configuration de la boutique</p>
+          <div style={{display:"grid",gridTemplateColumns:gc("1fr 1fr","1fr 1fr","1fr"),gap:14}}>
+            {[["🏪 Boutique",[["Nom","BADAOUR"],["Email","service@badaour.com"],["Tél","438-988-6682"],["Devise","$CA"]]],["🚚 Livraison",[["Frais standard","18 $CA"],["Gratuit dès","200 $CA"],["Délai moyen","14-21 jours"]]],["💳 Paiement",[["Carte","Activé"],["PayPal","Activé"],["Interac","Activé"]]],["🔔 Notifications",[["Nouvelle commande","Activé"],["Stock faible","Activé"],["Commande livrée","Activé"]]]].map(([title,fields])=>(<div key={title} style={{background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"22px"}}><h3 style={{fontSize:14,color:A.accent,marginBottom:12}}>{title}</h3>{fields.map(([l,v])=>(<div key={l} style={{marginBottom:10}}><label style={{display:"block",fontSize:9,color:A.textMuted,letterSpacing:1,marginBottom:3,textTransform:"uppercase"}}>{l}</label><input defaultValue={v} style={{width:"100%",padding:"8px 10px",background:A.bg,border:`1px solid ${A.border}`,borderRadius:6,color:A.text,fontSize:12,fontFamily:"Georgia"}} /></div>))}</div>))}
+          </div>
+          <div style={{display:"flex",gap:12,marginTop:18,flexWrap:"wrap"}}>
+            <button onClick={()=>toast("Paramètres sauvegardés ✓")} style={{background:A.accent,color:DARK,border:"none",padding:"12px 24px",borderRadius:8,fontFamily:"Georgia",fontWeight:"bold",fontSize:13}}>💾 Sauvegarder</button>
+            <button onClick={resetData} style={{background:A.warningBg,border:`1px solid ${A.warning}44`,padding:"12px 24px",borderRadius:8,fontFamily:"Georgia",fontSize:12,color:A.warning}}>🔄 Réinitialiser les données</button>
+          </div>
+          <div style={{marginTop:24,background:A.surface,border:`1px solid ${A.border}`,borderRadius:10,padding:mobile?"16px":"22px"}}>
+            <h3 style={{fontSize:14,color:A.accent,marginBottom:10}}>💾 Stockage persistant</h3>
+            <p style={{fontSize:12,color:A.textDim,lineHeight:1.7}}>Les données (produits, commandes, clients) sont sauvegardées automatiquement. Elles persistent entre les sessions et sont partagées avec la boutique publique. Les modifications faites ici (ajout/suppression de produits, mise à jour de statut) sont immédiatement visibles côté client.</p>
+            <div style={{marginTop:12,display:"flex",gap:10,flexWrap:"wrap"}}>
+              <div style={{background:A.bg,borderRadius:6,padding:"8px 14px",fontSize:11}}><span style={{color:A.accent,fontWeight:"bold"}}>{products.length}</span> <span style={{color:A.textMuted}}>produits</span></div>
+              <div style={{background:A.bg,borderRadius:6,padding:"8px 14px",fontSize:11}}><span style={{color:A.accent,fontWeight:"bold"}}>{orders.length}</span> <span style={{color:A.textMuted}}>commandes</span></div>
+              <div style={{background:A.bg,borderRadius:6,padding:"8px 14px",fontSize:11}}><span style={{color:A.accent,fontWeight:"bold"}}>{[...new Set(orders.map(o=>o.email))].length}</span> <span style={{color:A.textMuted}}>clients</span></div>
+            </div>
+          </div>
+        </div>)}
+      </main>
     </div>
   );
 }

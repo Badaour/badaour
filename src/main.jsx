@@ -33,8 +33,7 @@ function AdminGate() {
         <div style={{fontSize:42,marginBottom:8}}>🔐</div>
         <h1 style={{color:"#1A0A00",fontSize:28,margin:"0 0 4px"}}>BADAOUR</h1>
         <p style={{color:"#D4AF37",fontSize:13,letterSpacing:3,margin:"0 0 24px"}}>ESPACE ADMINISTRATION</p>
-        <p style={{color:"#8B6A3E",fontSize:14,marginBottom:24}}>Entrez le code d&#39;accès pour continuer</p>
-        <div style={{position:"relative",marginBottom:16}}>
+        <p style={{color:"#8B6A3E",fontSize:14,marginBottom:24}}>Entrez le code d'accès pour continuer</p>        <div style={{position:"relative",marginBottom:16}}>
           <input
             type={show ? "text" : "password"}
             value={code}

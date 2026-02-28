@@ -180,6 +180,10 @@ export default function BADAOURAdmin(){
     return mc&&mq;
   });
 
+  const saveToAPI=async(prods)=>{
+    try{await fetch("/api/save-products",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({products:prods})});}catch(e){console.error("Save error",e);}
+  };
+
   const handleSaveNew=()=>{
     if(!newP.name||!newP.price){toast("❌ Nom et prix obligatoires");return;}
     const p={...newP,id:Date.now(),price:+newP.price,stock:+newP.stock||0,sold:0};

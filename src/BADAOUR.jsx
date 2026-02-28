@@ -15,7 +15,7 @@ const PHONE = "438-988-6682";
 const EMAIL = "service@badaour.com";
 
 // ─── PRODUCT DATA ────────────────────────────────────────────────────────────
-const PRODUCTS = [
+const DEFAULT_PRODUCTS = [
   { id:1, name:"Grand Boubou Brodé", category:"homme", sub:"Boubou", artisan:"Moussa Diallo", city:"Dakar", country:"Sénégal", price:189, tag:"Best", desc:"Broderie main sur bazin riche, teinture naturelle indigo. Tailles S à XXL.", gradient:"linear-gradient(135deg,#1A3A6B,#0D2550,#1A3A6B)", emoji:"👘" },
   { id:2, name:"Dashiki Festif", category:"homme", sub:"Chemise", artisan:"Koffi Asante", city:"Accra", country:"Ghana", price:78, tag:"Nouveau", desc:"Coton léger brodé, col en V, manches courtes. Couleurs vives traditionnelles.", gradient:"linear-gradient(135deg,#E74C3C,#C0392B,#A93226)", emoji:"👔" },
   { id:3, name:"Agbada Cérémonie", category:"homme", sub:"Tenue complète", artisan:"Adebayo Okafor", city:"Lagos", country:"Nigeria", price:245, tag:"Premium", desc:"Ensemble 3 pièces : robe, tunique et pantalon. Broderie dorée exclusive.", gradient:"linear-gradient(135deg,#6B2FA0,#5A1F8A,#4A0F7A)", emoji:"🎩" },
@@ -33,6 +33,7 @@ const PRODUCTS = [
   { id:15, name:"Huile de Karité Pure", category:"divers", sub:"Beauté", artisan:"Mariam Ouédraogo", city:"Ouagadougou", country:"Burkina Faso", price:34, tag:"Bio", desc:"Karité brut non raffiné, coopérative de femmes. 100% naturel. 200ml.", gradient:"linear-gradient(135deg,#C8956C,#A07820,#8B6A3E)", emoji:"🧴" },
   { id:16, name:"Tissu Wax 6 yards", category:"divers", sub:"Tissu", artisan:"Koffi Mensah", city:"Lomé", country:"Togo", price:58, tag:"Populaire", desc:"Wax hollandais authentique double face. Motifs exclusifs. 6 yards.", gradient:"linear-gradient(135deg,#E74C3C,#F1C40F,#27AE60)", emoji:"🧵" },
 ];
+const PRODUCTS=(()=>{try{const s=localStorage.getItem("badaour_products");return s?JSON.parse(s):DEFAULT_PRODUCTS;}catch{return DEFAULT_PRODUCTS;}})();
 
 const CATEGORIES = [
   { key:"homme", label:"Homme", emoji:"👘", color:"#1A3A6B", full:"Habillement Homme", desc:"Boubous, dashikis, agbadas, tenues de cérémonie" },

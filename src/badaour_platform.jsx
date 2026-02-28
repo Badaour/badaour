@@ -129,7 +129,7 @@ function PhotoUploader({photos=[],onChange,maxPhotos=8}){
 // ─── MAIN ADMIN PANEL ────────────────────────────────────────────────────────
 export default function BADAOURAdmin(){
   const [page,setPage]=useState("dashboard");
-  const [products,setProducts]=useState(initProducts);
+  const [products,setProducts]=useState(()=>{try{const s=localStorage.getItem("badaour_products");return s?JSON.parse(s):initProducts;}catch{return initProducts;}});
   const [orders,setOrders]=useState(initOrders);
   const [editProduct,setEditP]=useState(null);
   const [showNew,setShowNew]=useState(false);
@@ -172,20 +172,20 @@ export default function BADAOURAdmin(){
   const handleSaveNew=()=>{
     if(!newP.name||!newP.price){toast("❌ Nom et prix obligatoires");return;}
     const p={...newP,id:Date.now(),price:+newP.price,stock:+newP.stock||0,sold:0};
-    setProducts(prev=>[p,...prev]);
+    const updated=[p,...prev];localStorage.setItem("badaour_products",JSON.stringify(updated));return updated;
     setShowNew(false);
     setNewP({name:"",category:"homme",sub:"",artisan:"",city:"",country:"Sénégal",price:"",stock:"",tag:"Nouveau",desc:"",emoji:"👘",photos:[]});
     toast("✅ Produit ajouté avec succès !");
   };
 
   const handleUpdateProduct=(updated)=>{
-    setProducts(prev=>prev.map(p=>p.id===updated.id?updated:p));
+    setProducts(prev=>{const u=prev.map(p=>p.id===updated.id?updated:p);localStorage.setItem("badaour_products",JSON.stringify(u));return u;});
     setEditP(null);
     toast("✅ Produit mis à jour !");
   };
 
   const handleDeleteProduct=(id)=>{
-    setProducts(prev=>prev.filter(p=>p.id!==id));
+    setProducts(prev=>{const u=prev.filter(p=>p.id!==id);localStorage.setItem("badaour_products",JSON.stringify(u));return u;});
     setEditP(null);
     toast("🗑️ Produit supprimé");
   };

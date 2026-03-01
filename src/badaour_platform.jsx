@@ -136,6 +136,8 @@ export default function BADAOURAdmin(){
   useEffect(()=>{
     fetch(GITHUB_PRODUCTS_URL+"?t="+Date.now())
       .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setProducts(data);}).catch(()=>{});
+    fetch(GITHUB_ARTISANS_URL+"?t="+Date.now())
+      .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setArtisans(data);}).catch(()=>{});
   },[]);
 
   const saveToGitHub=async(updated)=>{
@@ -213,25 +215,36 @@ export default function BADAOURAdmin(){
   };
 
   // ─── ARTISAN HANDLERS ───
+  const saveArtisansToGitHub=async(list)=>{
+    try{await fetch("/api/save-artisans",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({artisans:list})});}
+    catch(e){console.error("Save artisans error",e);}
+  };
+
   const handleSaveNewArt=()=>{
     if(!newArt.name||!newArt.metier){toast("❌ Nom et métier obligatoires");return;}
     const a={...newArt,id:Date.now()};
-    setArtisans(prev=>[a,...prev]);
+    const updated=[a,...artisans];
+    setArtisans(updated);
     setShowNewArt(false);
     setNewArt({name:"",metier:"",city:"",country:"Sénégal",emoji:"✂️",exp:"",bio:"",email:"",phone:"",photo:""});
-    toast("✅ Artisan ajouté avec succès !");
+    saveArtisansToGitHub(updated);
+    toast("✅ Artisan ajouté ! Visible dans ~30s");
   };
 
   const handleUpdateArt=(updated)=>{
-    setArtisans(prev=>prev.map(a=>a.id===updated.id?updated:a));
+    const list=artisans.map(a=>a.id===updated.id?updated:a);
+    setArtisans(list);
     setEditArt(null);
+    saveArtisansToGitHub(list);
     toast("✅ Artisan mis à jour !");
   };
 
   const handleDeleteArt=(id)=>{
     if(!confirm("Supprimer cet artisan ?"))return;
-    setArtisans(prev=>prev.filter(a=>a.id!==id));
+    const list=artisans.filter(a=>a.id!==id);
+    setArtisans(list);
     setEditArt(null);
+    saveArtisansToGitHub(list);
     toast("🗑️ Artisan supprimé");
   };
 

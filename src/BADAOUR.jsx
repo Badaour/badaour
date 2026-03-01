@@ -237,6 +237,7 @@ export default function BADAOUR(){
   const [page,setPage]=useState("home");
   const [products,setProducts]=useState(DEFAULT_PRODUCTS);
   const [selProduct,setSelProduct]=useState(null);
+  const [artisansData,setArtisansData]=useState([]);
   const [cat,setCat]=useState(null);
   const [search,setSearch]=useState("");
   const [cart,setCart]=useState([]);
@@ -261,6 +262,8 @@ export default function BADAOUR(){
   useEffect(()=>{
     fetch(GITHUB_PRODUCTS_URL+"?t="+Date.now())
       .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setProducts(data);}).catch(()=>{});
+    fetch(GITHUB_ARTISANS_URL+"?t="+Date.now())
+      .then(r=>r.json()).then(data=>{if(Array.isArray(data)&&data.length>0)setArtisansData(data);}).catch(()=>{});
   },[]);
 
   // Hero animation states
@@ -600,17 +603,19 @@ export default function BADAOUR(){
             <h1 style={{fontSize:38,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",fontWeight:800}}>Nos Artisans</h1>
           </div>
           <div className="grid-3" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:20,marginBottom:48}}>
-            {[{n:"Moussa Diallo",m:"Tailleur brodeur",v:"Dakar, Sénégal",e:"✂️",a:"23 ans",h:"Moussa perpétue l'art du grand boubou. Chaque broderie prend 4 jours."},{n:"Fatoumata Koné",m:"Artisane bogolan",v:"Bamako, Mali",e:"🎨",a:"18 ans",h:"Fatoumata ressuscite les motifs anciens du bogolan peint à la boue."},{n:"Abena Asante",m:"Perlière Krobo",v:"Accra, Ghana",e:"🔮",a:"15 ans",h:"Abena dirige une coopérative de 12 femmes artisanes."},{n:"Cheikh Ndiaye",m:"Sculpteur sur bois",v:"Thiès, Sénégal",e:"🌳",a:"30 ans",h:"Maître sculpteur, Cheikh crée des pièces uniques en bois de venn."},{n:"Kweku Mensah",m:"Tisserand kente",v:"Kumasi, Ghana",e:"🧵",a:"25 ans",h:"Tisserand royal, gardien de la tradition kente Ashanti."},{n:"Aïcha Diop",m:"Couturière haute couture",v:"Dakar, Sénégal",e:"👗",a:"20 ans",h:"Aïcha allie couture traditionnelle africaine et tendances contemporaines."}].map((a,i)=>(
-              <div key={a.n} style={{background:T.white,borderRadius:16,padding:"32px 28px",border:`1px solid ${T.border}`,transition:"all .3s",animation:`fadeIn .4s ease ${i*.08}s both`}}
+            {artisansData.map((a,i)=>(
+              <div key={a.id||a.name} style={{background:T.white,borderRadius:16,padding:"28px",border:`1px solid ${T.border}`,transition:"all .3s",animation:`fadeIn .4s ease ${i*.08}s both`}}
                 onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-5px)";e.currentTarget.style.boxShadow="0 16px 40px rgba(0,0,0,.08)";}}
                 onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
-                <div style={{width:64,height:64,background:T.dark,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:16,border:`3px solid ${T.gold}`}}>{a.e}</div>
-                <div style={{fontSize:10,fontWeight:700,letterSpacing:"2px",color:T.terra,textTransform:"uppercase",marginBottom:4}}>{a.m}</div>
-                <h3 style={{fontSize:20,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",fontWeight:700,marginBottom:6}}>{a.n}</h3>
-                <div style={{fontSize:12,color:T.muted,marginBottom:4}}>📍 {a.v}</div>
-                <div style={{fontSize:12,color:T.gold,fontWeight:700,marginBottom:12}}>⭐ {a.a} d'expérience</div>
+                <div style={{width:80,height:80,borderRadius:"50%",border:`3px solid ${T.gold}`,marginBottom:16,overflow:"hidden",flexShrink:0,background:T.dark,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32}}>
+                  {a.photo?<img src={a.photo} alt={a.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:a.emoji||"👤"}
+                </div>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"2px",color:T.terra,textTransform:"uppercase",marginBottom:4}}>{a.metier||a.m}</div>
+                <h3 style={{fontSize:20,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",fontWeight:700,marginBottom:6}}>{a.name||a.n}</h3>
+                <div style={{fontSize:12,color:T.muted,marginBottom:4}}>📍 {a.city||""}{a.city&&a.country?", ":""}{a.country||a.v||""}</div>
+                {(a.exp||a.a)&&<div style={{fontSize:12,color:T.gold,fontWeight:700,marginBottom:12}}>⭐ {a.exp||a.a} d'expérience</div>}
                 <div style={{height:1,background:T.border,margin:"12px 0"}}/>
-                <p style={{fontSize:13,color:"#888",lineHeight:1.7}}>{a.h}</p>
+                <p style={{fontSize:13,color:"#888",lineHeight:1.7}}>{a.bio||a.h}</p>
               </div>
             ))}
           </div>

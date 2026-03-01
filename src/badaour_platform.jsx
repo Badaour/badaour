@@ -127,6 +127,7 @@ function PhotoUploader({photos=[],onChange,maxPhotos=8}){
 }
 
 // ─── MAIN ADMIN PANEL ────────────────────────────────────────────────────────
+const GITHUB_ARTISANS_URL = "https://raw.githubusercontent.com/Badaour/badaour/main/data/artisans.json";
 const GITHUB_PRODUCTS_URL = "https://raw.githubusercontent.com/Badaour/badaour/main/data/products.json";
 
 export default function BADAOURAdmin(){

@@ -346,7 +346,9 @@ export default function BADAOURAdmin(){
     const handlePhoto=(e)=>{
       const file=e.target.files?.[0];
       if(!file)return;
-      if(!file.type.startsWith("image/")){alert("Fichier image requis");return;}
+      const ext=file.name.split(".").pop().toLowerCase();
+      const validExt=["jpg","jpeg","png","webp","gif","heic","avif"].includes(ext);
+      if(!file.type.startsWith("image/")&&!validExt){alert("Fichier image requis (jpg, png, webp...)");return;}
       if(file.size>5*1024*1024){alert("Max 5MB");return;}
       const reader=new FileReader();
       reader.onload=(ev)=>setData({...data,photo:ev.target.result});

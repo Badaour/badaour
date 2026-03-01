@@ -119,13 +119,74 @@ function Inp({label,...props}){
   );
 }
 
-function ProductCard({p,addToCart,wishlist,toggleWish,style:extraStyle}){
+// ─── PRODUCT MODAL ───────────────────────────────────────────────────────────
+function ProductModal({p,onClose,addToCart,wishlist,toggleWish}){
+  const [slide,setSlide]=useState(0);
+  const [added,setAdded]=useState(false);
+  const inWish=wishlist.includes(p.id);
+  const photos=p.photos&&p.photos.length>0?p.photos:null;
+  const handleAdd=()=>{addToCart(p);setAdded(true);setTimeout(()=>setAdded(false),1800);};
+  useEffect(()=>{
+    const esc=(e)=>{if(e.key==="Escape")onClose();};
+    document.addEventListener("keydown",esc);
+    document.body.style.overflow="hidden";
+    return()=>{document.removeEventListener("keydown",esc);document.body.style.overflow="";};
+  },[]);
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,.75)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:T.white,borderRadius:24,width:"100%",maxWidth:880,maxHeight:"90vh",overflow:"auto",display:"flex",flexDirection:"row",boxShadow:"0 32px 80px rgba(0,0,0,.35)"}}>
+        {/* GALERIE PHOTOS */}
+        <div style={{width:"50%",minWidth:280,background:p.gradient||"#1A1714",position:"relative",display:"flex",flexDirection:"column",flexShrink:0,borderRadius:"24px 0 0 24px",overflow:"hidden"}}>
+          <div style={{flex:1,position:"relative",minHeight:300}}>
+            {photos
+              ?<img src={photos[slide].url} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0}}/>
+              :<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:100,position:"absolute",inset:0}}>{p.emoji}</div>
+            }
+            {photos&&photos.length>1&&<>
+              <button onClick={()=>setSlide(s=>(s-1+photos.length)%photos.length)} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,.9)",border:"none",borderRadius:"50%",width:36,height:36,cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+              <button onClick={()=>setSlide(s=>(s+1)%photos.length)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,.9)",border:"none",borderRadius:"50%",width:36,height:36,cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+            </>}
+          </div>
+          {photos&&photos.length>1&&(
+            <div style={{display:"flex",gap:6,padding:"10px 12px",background:"rgba(0,0,0,.4)",overflowX:"auto"}}>
+              {photos.map((ph,i)=>(
+                <img key={i} src={ph.url} alt="" onClick={()=>setSlide(i)} style={{width:52,height:52,objectFit:"cover",borderRadius:8,cursor:"pointer",border:`2px solid ${i===slide?"#fff":"transparent"}`,flexShrink:0,opacity:i===slide?1:.6,transition:"all .2s"}}/>
+              ))}
+            </div>
+          )}
+          {photos&&photos.length>1&&<div style={{position:"absolute",top:12,right:12,background:"rgba(0,0,0,.5)",color:"#fff",padding:"4px 10px",borderRadius:100,fontSize:11}}>{slide+1}/{photos.length}</div>}
+        </div>
+        {/* INFOS */}
+        <div style={{flex:1,padding:"32px 28px",display:"flex",flexDirection:"column",gap:12,overflowY:"auto"}}>
+          <button onClick={onClose} style={{alignSelf:"flex-end",background:T.sand,border:"none",width:36,height:36,borderRadius:"50%",cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✕</button>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:"2px",color:CATEGORIES.find(c=>c.key===p.category)?.color||T.terra,textTransform:"uppercase"}}>{p.sub}</div>
+          <h2 style={{fontSize:26,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",margin:0,lineHeight:1.2}}>{p.name}</h2>
+          <div style={{fontSize:12,color:T.muted}}>✂️ {p.artisan} · {p.city}, {p.country}</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <span style={{background:tagMap[p.tag]||"#666",color:"#fff",padding:"3px 12px",fontSize:10,fontWeight:700,letterSpacing:"1px",borderRadius:100,textTransform:"uppercase"}}>{p.tag}</span>
+            {p.stock>0&&<span style={{background:"#e8f5e9",color:"#2e7d32",padding:"3px 12px",fontSize:10,fontWeight:700,borderRadius:100}}>✓ En stock ({p.stock})</span>}
+          </div>
+          <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>{p.desc}</p>
+          <div style={{borderTop:`1px solid ${T.border}`,paddingTop:16,marginTop:"auto"}}>
+            <div style={{fontSize:32,fontWeight:800,color:T.dark,fontFamily:"'Playfair Display',Georgia,serif",marginBottom:16}}>{p.price}<span style={{fontSize:14,fontWeight:400,color:T.muted}}> $CA</span></div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={handleAdd} style={{flex:1,background:added?T.green:T.dark,color:"#fff",border:"none",padding:"14px 24px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,borderRadius:100,transition:"all .3s"}}>{added?"✓ Ajouté au panier !":"+ Ajouter au panier"}</button>
+              <button onClick={()=>toggleWish(p.id)} style={{background:inWish?"#fff0f0":"transparent",border:`1.5px solid ${inWish?"#e74c3c":T.border}`,borderRadius:"50%",width:50,height:50,cursor:"pointer",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{inWish?"❤️":"🤍"}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({p,addToCart,wishlist,toggleWish,onOpen,style:extraStyle}){
   const [hover,setHover]=useState(false);
   const [added,setAdded]=useState(false);
   const inWish=wishlist.includes(p.id);
   const handleAdd=()=>{addToCart(p);setAdded(true);setTimeout(()=>setAdded(false),1400);};
   return(
-    <div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+    <div onClick={()=>onOpen&&onOpen(p)} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
       style={{background:T.white,borderRadius:16,overflow:"hidden",transition:"transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s",transform:hover?"translateY(-8px) scale(1.01)":"none",boxShadow:hover?"0 24px 48px rgba(12,10,8,.12)":"0 2px 8px rgba(12,10,8,.04)",cursor:"pointer",position:"relative",...extraStyle}}>
       <div style={{height:220,background:p.gradient||"#1A1714",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
         {p.photos&&p.photos.length>0
@@ -175,6 +236,7 @@ function Summary({cart,subtotal,shipping,taxes,total,onContinue,address}){
 export default function BADAOUR(){
   const [page,setPage]=useState("home");
   const [products,setProducts]=useState(DEFAULT_PRODUCTS);
+  const [selProduct,setSelProduct]=useState(null);
   const [cat,setCat]=useState(null);
   const [search,setSearch]=useState("");
   const [cart,setCart]=useState([]);
@@ -270,6 +332,8 @@ export default function BADAOUR(){
   const nav=[{k:"home",l:"Accueil"},{k:"boutique",l:"Boutique"},{k:"artisans",l:"Artisans"},{k:"suivi",l:"Suivi"},{k:"commande",l:"Sur mesure"}];
 
   return(
+    <>
+    {selProduct&&<ProductModal p={selProduct} onClose={()=>setSelProduct(null)} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish}/>}
     <div style={{fontFamily:"'DM Sans',sans-serif",background:T.bg,minHeight:"100vh",color:T.dark}}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
       <style>{`
@@ -489,7 +553,7 @@ export default function BADAOUR(){
               <button onClick={()=>{setPage("boutique");setCat(null);setSearch("");}} style={{background:"transparent",border:`2px solid ${T.dark}`,color:T.dark,padding:"10px 24px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:600,borderRadius:100,letterSpacing:".5px"}}>Voir tout →</button>
             </div>
             <div className="grid-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:20}}>
-              {[products[0],products[3],products[9]||products[5],products[13]||products[6]].filter(Boolean).map((p,i)=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} style={{animation:`fadeIn .4s ease ${i*.1}s both`}}/>)}
+              {[products[0],products[3],products[9]||products[5],products[13]||products[6]].filter(Boolean).map((p,i)=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} onOpen={setSelProduct} style={{animation:`fadeIn .4s ease ${i*.1}s both`}}/>)}
             </div>
           </div>
 
@@ -523,7 +587,7 @@ export default function BADAOUR(){
           </div>
           {filtered.length===0?<div style={{textAlign:"center",padding:80,color:T.muted}}><div style={{fontSize:48}}>🔍</div><div style={{fontSize:17,marginTop:14,fontFamily:"'Playfair Display',Georgia,serif"}}>Aucun produit trouvé</div></div>
           :<div className="grid-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:20}}>
-            {filtered.map((p,i)=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} style={{animation:`fadeIn .3s ease ${i*.04}s both`}}/>)}
+            {filtered.map((p,i)=><ProductCard key={p.id} p={p} addToCart={addToCart} wishlist={wishlist} toggleWish={toggleWish} onOpen={setSelProduct} style={{animation:`fadeIn .3s ease ${i*.04}s both`}}/>)}
           </div>}
         </div>
       )}
@@ -826,5 +890,6 @@ export default function BADAOUR(){
         </div>
       </footer>
     </div>
+  </>
   );
 }

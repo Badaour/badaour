@@ -217,8 +217,12 @@ export default function BADAOURAdmin(){
 
   // ─── ARTISAN HANDLERS ───
   const saveArtisansToGitHub=async(list)=>{
-    try{await fetch("/api/save-artisans",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({artisans:list})});}
-    catch(e){console.error("Save artisans error",e);}
+    try{
+      const r=await fetch("/api/save-artisans",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({artisans:list})});
+      const d=await r.json();
+      if(d.success){toast("✅ Photo sauvegardée sur le serveur !");}
+      else{toast("⚠️ Erreur sauvegarde: "+d.error);}
+    }catch(e){toast("❌ Erreur réseau: "+e.message);console.error(e);}
   };
 
   const handleSaveNewArt=()=>{
@@ -399,23 +403,25 @@ export default function BADAOURAdmin(){
       setPos({x:t.clientX-startPos.x,y:t.clientY-startPos.y});
     };
 
-    const CANVAS_SIZE=180;
+    const CANVAS_SIZE=200;
     const applyCrop=()=>{
       const img=imgRef.current;
-      if(!img)return;
+      if(!img||!img.complete)return;
       const canvas=document.createElement("canvas");
       canvas.width=CANVAS_SIZE;canvas.height=CANVAS_SIZE;
       const ctx=canvas.getContext("2d");
-      // Draw circular clip
+      // Circular clip
       ctx.beginPath();ctx.arc(CANVAS_SIZE/2,CANVAS_SIZE/2,CANVAS_SIZE/2,0,Math.PI*2);ctx.clip();
-      // Scale image to fit in crop zone display, then map to canvas
-      const displayScale=CROP_SIZE/Math.max(img.naturalWidth,img.naturalHeight);
-      const iw=img.naturalWidth*displayScale*scale*(CANVAS_SIZE/CROP_SIZE);
-      const ih=img.naturalHeight*displayScale*scale*(CANVAS_SIZE/CROP_SIZE);
-      const dx=(CANVAS_SIZE/2)+(pos.x*(CANVAS_SIZE/CROP_SIZE))-iw/2;
-      const dy=(CANVAS_SIZE/2)+(pos.y*(CANVAS_SIZE/CROP_SIZE))-ih/2;
+      // The CSS renders: image center at (CROP_SIZE/2 + pos.x, CROP_SIZE/2 + pos.y)
+      // Image rendered size = naturalWidth * scale, naturalHeight * scale (no CSS resize)
+      // We map this to CANVAS_SIZE x CANVAS_SIZE
+      const ratio=CANVAS_SIZE/CROP_SIZE;
+      const iw=img.naturalWidth*scale*ratio;
+      const ih=img.naturalHeight*scale*ratio;
+      const dx=(CANVAS_SIZE/2)+pos.x*ratio-iw/2;
+      const dy=(CANVAS_SIZE/2)+pos.y*ratio-ih/2;
       ctx.drawImage(img,dx,dy,iw,ih);
-      const cropped=canvas.toDataURL("image/jpeg",0.72);
+      const cropped=canvas.toDataURL("image/jpeg",0.8);
       setData({...data,photo:cropped});
       setCropSrc(null);
     };

@@ -238,7 +238,15 @@ export default function BADAOUR(){
   const [page,setPage]=useState("home");
   const [products,setProducts]=useState(DEFAULT_PRODUCTS);
   const [selProduct,setSelProduct]=useState(null);
-  const [artisansData,setArtisansData]=useState([]);
+  const DEFAULT_ARTISANS=[
+    {id:1,name:"Moussa Diallo",metier:"Tailleur brodeur",city:"Dakar",country:"Sénégal",emoji:"✂️",exp:"23 ans",bio:"Moussa perpétue l'art du grand boubou. Chaque broderie prend 4 jours.",photo:""},
+    {id:2,name:"Fatoumata Koné",metier:"Artisane bogolan",city:"Bamako",country:"Mali",emoji:"🎨",exp:"18 ans",bio:"Fatoumata ressuscite les motifs anciens du bogolan peint à la boue.",photo:""},
+    {id:3,name:"Abena Asante",metier:"Perlière Krobo",city:"Accra",country:"Ghana",emoji:"🔮",exp:"15 ans",bio:"Abena dirige une coopérative de 12 femmes artisanes.",photo:""},
+    {id:4,name:"Cheikh Ndiaye",metier:"Sculpteur sur bois",city:"Thiès",country:"Sénégal",emoji:"🌳",exp:"30 ans",bio:"Maître sculpteur, Cheikh crée des pièces uniques en bois de venn.",photo:""},
+    {id:5,name:"Kweku Mensah",metier:"Tisserand kente",city:"Kumasi",country:"Ghana",emoji:"🧵",exp:"25 ans",bio:"Tisserand royal, gardien de la tradition kente Ashanti.",photo:""},
+    {id:6,name:"Aïcha Diop",metier:"Couturière haute couture",city:"Dakar",country:"Sénégal",emoji:"👗",exp:"20 ans",bio:"Aïcha allie couture traditionnelle africaine et tendances contemporaines.",photo:""},
+  ];
+  const [artisansData,setArtisansData]=useState(DEFAULT_ARTISANS);
   const [cat,setCat]=useState(null);
   const [search,setSearch]=useState("");
   const [cart,setCart]=useState([]);

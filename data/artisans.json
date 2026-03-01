@@ -1,0 +1,8 @@
+[
+  {"id":1,"name":"Moussa Diallo","metier":"Tailleur brodeur","city":"Dakar","country":"Sénégal","emoji":"✂️","exp":"23 ans","bio":"Moussa perpétue l'art du grand boubou. Chaque broderie prend 4 jours.","email":"moussa@artisan.sn","phone":"+221 77 123 4567","photo":""},
+  {"id":2,"name":"Fatoumata Koné","metier":"Artisane bogolan","city":"Bamako","country":"Mali","emoji":"🎨","exp":"18 ans","bio":"Fatoumata ressuscite les motifs anciens du bogolan peint à la boue.","email":"fatoumata@artisan.ml","phone":"+223 66 789 0123","photo":""},
+  {"id":3,"name":"Abena Asante","metier":"Perlière Krobo","city":"Accra","country":"Ghana","emoji":"🔮","exp":"15 ans","bio":"Abena dirige une coopérative de 12 femmes artisanes.","email":"abena@artisan.gh","phone":"+233 20 456 7890","photo":""},
+  {"id":4,"name":"Cheikh Ndiaye","metier":"Sculpteur sur bois","city":"Thiès","country":"Sénégal","emoji":"🌳","exp":"30 ans","bio":"Maître sculpteur, Cheikh crée des pièces uniques en bois de venn.","email":"cheikh@artisan.sn","phone":"+221 76 234 5678","photo":""},
+  {"id":5,"name":"Kweku Mensah","metier":"Tisserand kente","city":"Kumasi","country":"Ghana","emoji":"🧵","exp":"25 ans","bio":"Tisserand royal, gardien de la tradition kente Ashanti.","email":"kweku@artisan.gh","phone":"+233 24 567 8901","photo":""},
+  {"id":6,"name":"Aïcha Diop","metier":"Couturière haute couture","city":"Dakar","country":"Sénégal","emoji":"👗","exp":"20 ans","bio":"Aïcha allie couture traditionnelle africaine et tendances contemporaines.","email":"aicha@artisan.sn","phone":"+221 78 345 6789","photo":""}
+]

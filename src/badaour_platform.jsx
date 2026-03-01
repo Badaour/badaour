@@ -210,9 +210,20 @@ export default function BADAOURAdmin(){
     toast("🗑️ Produit supprimé");
   };
 
-  const handleStatusChange=(orderId,newStatus)=>{
+  const handleStatusChange=async(orderId,newStatus)=>{
     setOrders(prev=>prev.map(o=>o.id===orderId?{...o,status:newStatus}:o));
     toast("✅ Statut mis à jour");
+    // Envoyer email d'expédition automatiquement
+    if(newStatus==="shipped"){
+      const order=orders.find(o=>o.id===orderId);
+      if(order?.email){
+        try{
+          await fetch("/api/send-shipping",{method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({order:{id:order.id,client:order.client,email:order.email,tracking:order.tracking||""}})});
+          toast("📧 Email d'expédition envoyé à "+order.email);
+        }catch(e){console.error(e);}
+      }
+    }
   };
 
   // ─── ARTISAN HANDLERS ───

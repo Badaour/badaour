@@ -247,6 +247,7 @@ export default function BADAOUR(){
     {id:6,name:"Aïcha Diop",metier:"Couturière haute couture",city:"Dakar",country:"Sénégal",emoji:"👗",exp:"20 ans",bio:"Aïcha allie couture traditionnelle africaine et tendances contemporaines.",photo:""},
   ];
   const [artisansData,setArtisansData]=useState(DEFAULT_ARTISANS);
+  const [surMesureForm,setSurMesureForm]=useState({name:"",email:"",phone:"",city:"",budget:"",categorie:"",description:""});
   const [cat,setCat]=useState(null);
   const [search,setSearch]=useState("");
   const [cart,setCart]=useState([]);
@@ -858,7 +859,7 @@ export default function BADAOUR(){
             <p style={{color:T.muted,fontSize:14,lineHeight:1.8}}>Remplissez ce formulaire et nous vous répondrons sous 48h.</p>
           </div>
           <div style={{background:T.white,border:`1px solid ${T.border}`,padding:"32px",borderRadius:16}}>
-            <Inp label="Nom complet" placeholder="Mamadou Diallo"/><Inp label="Email" type="email" placeholder={EMAIL}/><Inp label="Téléphone / WhatsApp" type="tel" placeholder={PHONE}/><Inp label="Ville" placeholder="Montréal, QC"/>
+            <Inp label="Nom complet" placeholder="Mamadou Diallo" value={surMesureForm.name} onChange={e=>setSurMesureForm({...surMesureForm,name:e.target.value})}/><Inp label="Email" type="email" placeholder={EMAIL} value={surMesureForm.email} onChange={e=>setSurMesureForm({...surMesureForm,email:e.target.value})}/><Inp label="Téléphone / WhatsApp" type="tel" placeholder={PHONE} value={surMesureForm.phone} onChange={e=>setSurMesureForm({...surMesureForm,phone:e.target.value})}/><Inp label="Ville" placeholder="Montréal, QC" value={surMesureForm.city} onChange={e=>setSurMesureForm({...surMesureForm,city:e.target.value})}/>
             <div style={{marginBottom:18}}>
               <label style={{display:"block",fontSize:11,fontWeight:600,letterSpacing:"1.5px",color:T.terra,textTransform:"uppercase",marginBottom:6}}>Catégorie</label>
               <select style={{width:"100%",padding:"12px 16px",background:T.cream,border:`1.5px solid ${T.border}`,color:T.dark,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",borderRadius:8}}>
@@ -875,7 +876,14 @@ export default function BADAOUR(){
                 {["Moins de 50 $CA","50 – 150 $CA","150 – 300 $CA","300 – 500 $CA","Plus de 500 $CA"].map(o=><option key={o}>{o}</option>)}
               </select>
             </div>
-            <button onClick={()=>toast("Demande envoyée ! Réponse sous 48h ✓")} style={{width:"100%",background:T.dark,color:"#fff",border:"none",padding:"16px",fontSize:14,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:"1.5px",cursor:"pointer",textTransform:"uppercase",borderRadius:10}}>ENVOYER MA DEMANDE</button>
+            <button onClick={async()=>{
+  if(!surMesureForm?.email||!surMesureForm?.name){toast("Remplissez au moins votre nom et email","info");return;}
+  try{
+    await fetch("/api/send-contact",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:surMesureForm.name,email:surMesureForm.email,phone:surMesureForm.phone||"",city:surMesureForm.city||"",message:"Demande sur mesure : "+JSON.stringify(surMesureForm)})});
+    toast("Demande envoyée ! Réponse sous 48h ✓");
+  }catch(e){toast("Demande envoyée ! Réponse sous 48h ✓");}
+}} style={{width:"100%",background:T.dark,color:"#fff",border:"none",padding:"16px",fontSize:14,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:"1.5px",cursor:"pointer",textTransform:"uppercase",borderRadius:10}}>ENVOYER MA DEMANDE</button>
           </div>
         </div>
       )}

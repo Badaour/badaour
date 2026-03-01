@@ -15,6 +15,7 @@ const PHONE = "438-988-6682";
 const EMAIL = "service@badaour.com";
 
 // ─── PRODUCT DATA ────────────────────────────────────────────────────────────
+const GITHUB_ARTISANS_URL = "https://raw.githubusercontent.com/Badaour/badaour/main/data/artisans.json";
 const GITHUB_PRODUCTS_URL = "https://raw.githubusercontent.com/Badaour/badaour/main/data/products.json";
 const DEFAULT_PRODUCTS = [
   { id:1, name:"Grand Boubou Brodé", category:"homme", sub:"Boubou", artisan:"Moussa Diallo", city:"Dakar", country:"Sénégal", price:189, tag:"Best", desc:"Broderie main sur bazin riche, teinture naturelle indigo. Tailles S à XXL.", gradient:"linear-gradient(135deg,#1A3A6B,#0D2550,#1A3A6B)", emoji:"👘" },

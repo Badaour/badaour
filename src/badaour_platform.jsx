@@ -399,19 +399,23 @@ export default function BADAOURAdmin(){
       setPos({x:t.clientX-startPos.x,y:t.clientY-startPos.y});
     };
 
+    const CANVAS_SIZE=180;
     const applyCrop=()=>{
       const img=imgRef.current;
       if(!img)return;
       const canvas=document.createElement("canvas");
-      canvas.width=300;canvas.height=300;
+      canvas.width=CANVAS_SIZE;canvas.height=CANVAS_SIZE;
       const ctx=canvas.getContext("2d");
-      ctx.beginPath();ctx.arc(150,150,150,0,Math.PI*2);ctx.clip();
-      const iw=img.naturalWidth*scale;
-      const ih=img.naturalHeight*scale;
-      const sx=(CROP_SIZE/2-iw/2+pos.x);
-      const sy=(CROP_SIZE/2-ih/2+pos.y);
-      ctx.drawImage(img,sx,sy,iw,ih);
-      const cropped=canvas.toDataURL("image/jpeg",0.9);
+      // Draw circular clip
+      ctx.beginPath();ctx.arc(CANVAS_SIZE/2,CANVAS_SIZE/2,CANVAS_SIZE/2,0,Math.PI*2);ctx.clip();
+      // Scale image to fit in crop zone display, then map to canvas
+      const displayScale=CROP_SIZE/Math.max(img.naturalWidth,img.naturalHeight);
+      const iw=img.naturalWidth*displayScale*scale*(CANVAS_SIZE/CROP_SIZE);
+      const ih=img.naturalHeight*displayScale*scale*(CANVAS_SIZE/CROP_SIZE);
+      const dx=(CANVAS_SIZE/2)+(pos.x*(CANVAS_SIZE/CROP_SIZE))-iw/2;
+      const dy=(CANVAS_SIZE/2)+(pos.y*(CANVAS_SIZE/CROP_SIZE))-ih/2;
+      ctx.drawImage(img,dx,dy,iw,ih);
+      const cropped=canvas.toDataURL("image/jpeg",0.72);
       setData({...data,photo:cropped});
       setCropSrc(null);
     };

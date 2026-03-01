@@ -357,17 +357,63 @@ export default function BADAOURAdmin(){
   // ─── ARTISAN FORM MODAL ───
   const ArtisanForm=({data,setData,onSave,onCancel,title,onDelete})=>{
     const photoRef=useRef(null);
+    const canvasRef=useRef(null);
+    const [cropSrc,setCropSrc]=useState(null);
+    const [drag,setDrag]=useState(false);
+    const [pos,setPos]=useState({x:0,y:0});
+    const [startPos,setStartPos]=useState({x:0,y:0});
+    const [scale,setScale]=useState(1);
+    const imgRef=useRef(null);
+    const CROP_SIZE=280;
+
     const handlePhoto=(e)=>{
       const file=e.target.files?.[0];
       if(!file)return;
       const ext=file.name.split(".").pop().toLowerCase();
       const validExt=["jpg","jpeg","png","webp","gif","heic","avif"].includes(ext);
       if(!file.type.startsWith("image/")&&!validExt){alert("Fichier image requis (jpg, png, webp...)");return;}
-      if(file.size>5*1024*1024){alert("Max 5MB");return;}
+      if(file.size>8*1024*1024){alert("Max 8MB");return;}
       const reader=new FileReader();
-      reader.onload=(ev)=>setData({...data,photo:ev.target.result});
+      reader.onload=(ev)=>{setCropSrc(ev.target.result);setPos({x:0,y:0});setScale(1);};
       reader.readAsDataURL(file);
       e.target.value="";
+    };
+
+    const onMouseDown=(e)=>{
+      setDrag(true);
+      setStartPos({x:e.clientX-pos.x,y:e.clientY-pos.y});
+    };
+    const onMouseMove=(e)=>{
+      if(!drag)return;
+      setPos({x:e.clientX-startPos.x,y:e.clientY-startPos.y});
+    };
+    const onMouseUp=()=>setDrag(false);
+
+    const onTouchStart=(e)=>{
+      const t=e.touches[0];
+      setDrag(true);setStartPos({x:t.clientX-pos.x,y:t.clientY-pos.y});
+    };
+    const onTouchMove=(e)=>{
+      if(!drag)return;
+      const t=e.touches[0];
+      setPos({x:t.clientX-startPos.x,y:t.clientY-startPos.y});
+    };
+
+    const applyCrop=()=>{
+      const img=imgRef.current;
+      if(!img)return;
+      const canvas=document.createElement("canvas");
+      canvas.width=300;canvas.height=300;
+      const ctx=canvas.getContext("2d");
+      ctx.beginPath();ctx.arc(150,150,150,0,Math.PI*2);ctx.clip();
+      const iw=img.naturalWidth*scale;
+      const ih=img.naturalHeight*scale;
+      const sx=(CROP_SIZE/2-iw/2+pos.x);
+      const sy=(CROP_SIZE/2-ih/2+pos.y);
+      ctx.drawImage(img,sx,sy,iw,ih);
+      const cropped=canvas.toDataURL("image/jpeg",0.9);
+      setData({...data,photo:cropped});
+      setCropSrc(null);
     };
     return(
     <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:60,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)",overflow:"auto"}}>
@@ -377,20 +423,45 @@ export default function BADAOURAdmin(){
           <button onClick={onCancel} style={{background:T.sand,border:"none",width:36,height:36,borderRadius:10,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
         </div>
 
+        {/* CROP MODAL */}
+        {cropSrc&&(
+          <div style={{position:"fixed",inset:0,zIndex:400,background:"rgba(0,0,0,.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20}}>
+            <div style={{color:"#fff",fontSize:15,fontWeight:700,letterSpacing:"1px"}}>✂️ ROGNER LA PHOTO</div>
+            <div style={{color:"rgba(255,255,255,.5)",fontSize:12,marginTop:-12}}>Glisse pour repositionner · Zoom pour agrandir</div>
+            {/* crop zone */}
+            <div style={{position:"relative",width:280,height:280,borderRadius:"50%",overflow:"hidden",border:"3px solid #C9A84C",cursor:"grab",flexShrink:0,userSelect:"none"}}
+              onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
+              onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onMouseUp}>
+              <img ref={imgRef} src={cropSrc} alt="crop" draggable={false}
+                style={{position:"absolute",left:"50%",top:"50%",transform:`translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px)) scale(${scale})`,transformOrigin:"center",maxWidth:"none",pointerEvents:"none",transition:drag?"none":"transform .1s"}}/>
+            </div>
+            {/* zoom slider */}
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <span style={{color:"rgba(255,255,255,.6)",fontSize:18}}>🔍</span>
+              <input type="range" min="0.5" max="3" step="0.05" value={scale}
+                onChange={e=>setScale(parseFloat(e.target.value))}
+                style={{width:200,accentColor:"#C9A84C"}}/>
+              <span style={{color:"rgba(255,255,255,.6)",fontSize:11}}>{Math.round(scale*100)}%</span>
+            </div>
+            <div style={{display:"flex",gap:12}}>
+              <button onClick={()=>setCropSrc(null)} style={{background:"transparent",border:"1.5px solid rgba(255,255,255,.3)",color:"#fff",padding:"11px 28px",borderRadius:100,cursor:"pointer",fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>Annuler</button>
+              <button onClick={applyCrop} style={{background:"#C9A84C",color:"#1A1714",border:"none",padding:"11px 32px",borderRadius:100,cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",letterSpacing:".5px"}}>✓ Appliquer</button>
+            </div>
+          </div>
+        )}
+
         {/* PHOTO DE PROFIL */}
         <div style={{display:"flex",alignItems:"center",gap:20,marginBottom:24,padding:20,background:T.cream,borderRadius:14,border:`1.5px dashed ${T.border}`}}>
           <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
-          <div onClick={()=>photoRef.current?.click()} style={{width:90,height:90,borderRadius:"50%",background:data.photo?"transparent":T.dark,border:data.photo?`3px solid ${T.gold}`:`3px dashed ${T.gold}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",overflow:"hidden",flexShrink:0,transition:"all .2s",position:"relative"}}
-            onMouseEnter={e=>{if(data.photo){e.currentTarget.querySelector('.photo-overlay').style.opacity='1';}}}
-            onMouseLeave={e=>{if(data.photo){e.currentTarget.querySelector('.photo-overlay').style.opacity='0';}}}>
+          <div onClick={()=>photoRef.current?.click()} style={{width:90,height:90,borderRadius:"50%",background:data.photo?"transparent":T.dark,border:data.photo?`3px solid ${T.gold}`:`3px dashed ${T.gold}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",overflow:"hidden",flexShrink:0,position:"relative"}}>
             {data.photo
-              ?<><img src={data.photo} alt="profil" style={{width:"100%",height:"100%",objectFit:"cover"}}/><div className="photo-overlay" style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .2s",borderRadius:"50%"}}><span style={{color:"#fff",fontSize:11,fontWeight:700}}>Changer</span></div></>
+              ?<img src={data.photo} alt="profil" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
               :<div style={{textAlign:"center"}}><div style={{fontSize:28,marginBottom:2}}>{data.emoji||"📷"}</div><div style={{fontSize:8,color:T.gold,fontWeight:700,letterSpacing:".5px"}}>AJOUTER</div></div>
             }
           </div>
           <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:700,color:T.dark,marginBottom:4}}>Photo de profil / Logo</div>
-            <div style={{fontSize:11,color:T.muted,lineHeight:1.6,marginBottom:10}}>Ajoutez une photo de l'artisan ou un logo. Formats : JPG, PNG, WebP. Max 5MB.</div>
+            <div style={{fontSize:13,fontWeight:700,color:T.dark,marginBottom:4}}>Photo de profil</div>
+            <div style={{fontSize:11,color:T.muted,lineHeight:1.6,marginBottom:10}}>Importez une photo → rognez en cercle parfait. JPG, PNG, WebP. Max 8MB.</div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={()=>photoRef.current?.click()} style={{background:T.dark,color:"#fff",border:"none",padding:"7px 16px",fontSize:11,fontWeight:600,cursor:"pointer",borderRadius:8,fontFamily:"'DM Sans',sans-serif"}}>{data.photo?"📷 Changer":"📷 Importer"}</button>
               {data.photo&&<button onClick={()=>setData({...data,photo:""})} style={{background:"transparent",border:`1px solid ${T.red}`,color:T.red,padding:"7px 14px",fontSize:11,fontWeight:600,cursor:"pointer",borderRadius:8,fontFamily:"'DM Sans',sans-serif"}}>✕ Retirer</button>}
